@@ -1,112 +1,372 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>פרויקט מסדי נתונים – ספרייה</title>
+  <title>פרויקט מסדי נתונים - ספרייה</title>
 
-  <!-- אם יש לך CSS משלך, תשאירי את השורה הזו כפי שהיא אצלך -->
+  <!-- אם יש לך style.css בפרויקט - תשאירי את זה -->
   <link rel="stylesheet" href="style.css" />
 
+  <!-- גיבוי CSS קטן כדי שלא "ייהרס" גם אם style.css לא נטען -->
   <style>
-    /* רק אם אין לך עיצוב מתאים - זה מינימלי */
-    .box { padding: 16px; border-radius: 12px; }
-    .btn { cursor: pointer; padding: 8px 14px; border-radius: 10px; border: 1px solid #ffffff33; background: #ffffff18; color: #fff; }
-    .btn:hover { background: #ffffff28; }
-    .muted { opacity: 0.8; font-size: 14px; }
-    .list { margin-top: 10px; }
-    .list li { margin: 6px 0; }
-    .error { color: #ffb3b3; margin-top: 10px; white-space: pre-wrap; }
-    .hidden { display: none; }
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      color:#fff;
+      background:#0b1220;
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:40px 16px;
+    }
+    .bg{
+      position:fixed;
+      inset:0;
+      background:
+        linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.55)),
+        url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=2000&q=60");
+      background-size:cover;
+      background-position:center;
+      filter:saturate(1.1);
+      z-index:-1;
+    }
+    .container{
+      width:min(1100px, 100%);
+    }
+    header{
+      text-align:center;
+      margin-bottom:22px;
+    }
+    header h1{
+      margin:0 0 8px 0;
+      font-size:44px;
+      letter-spacing:.5px;
+      text-shadow:0 6px 18px rgba(0,0,0,.35);
+    }
+    header p{
+      margin:0;
+      opacity:.9;
+      text-shadow:0 6px 18px rgba(0,0,0,.35);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 2fr 1fr;
+      gap:18px;
+    }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns:1fr; }
+    }
+
+    .card{
+      background:rgba(15, 25, 45, .55);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      backdrop-filter: blur(10px);
+      box-shadow:0 12px 30px rgba(0,0,0,.25);
+      padding:16px;
+    }
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:20px;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:10px;
+    }
+
+    button{
+      border:0;
+      border-radius:12px;
+      padding:10px 14px;
+      cursor:pointer;
+      background:rgba(255,255,255,.14);
+      color:#fff;
+      font-weight:700;
+    }
+    button:hover{ background:rgba(255,255,255,.20); }
+
+    input, select{
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.18);
+      color:#fff;
+      padding:10px 12px;
+      outline:none;
+    }
+    input::placeholder{ color:rgba(255,255,255,.65); }
+
+    .hint{
+      opacity:.9;
+      font-size:13px;
+      margin-top:8px;
+    }
+    .status{
+      margin-top:10px;
+      font-size:13px;
+      opacity:.95;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:12px;
+      margin-top:10px;
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      text-align:right;
+      font-size:14px;
+      white-space:nowrap;
+    }
+    th{
+      background:rgba(255,255,255,.10);
+      font-weight:800;
+    }
+    tbody tr:hover{
+      background:rgba(255,255,255,.06);
+    }
+
+    .list{
+      margin:10px 0 0 0;
+      padding:0 18px 0 0;
+    }
+    .list li{
+      margin:8px 0;
+    }
+    .footer{
+      margin-top:16px;
+      text-align:center;
+      opacity:.85;
+      font-size:12px;
+    }
+    .error{
+      color:#ffd2d2;
+      font-weight:700;
+    }
+    .ok{
+      color:#d8ffd8;
+      font-weight:700;
+    }
   </style>
 </head>
 
 <body>
-  <main style="max-width:1100px; margin: 40px auto; padding: 0 16px; color:#fff;">
+  <div class="bg"></div>
 
-    <h1 style="margin-bottom:8px;">פרויקט מסדי נתונים – ספרייה</h1>
-    <p class="muted">נתונים נטענים דרך API (MySQL + Node).</p>
+  <div class="container">
+    <header>
+      <h1>פרויקט מסדי נתונים – ספרייה</h1>
+      <p>נתונים נשאבים מה־MySQL דרך API (Node.js) ומתעדכנים לפי מה שקיים במסד הנתונים.</p>
+    </header>
 
-    <!-- משתתפות -->
-    <section class="box" style="margin-top:20px; background:#00000055; border:1px solid #ffffff22;">
-      <h2 style="margin-top:0;">משתתפות</h2>
+    <div class="grid">
 
-      <button id="btnParticipants" class="btn">הצג משתתפים</button>
-      <button id="btnHideParticipants" class="btn hidden" style="margin-right:8px;">הסתר</button>
+      <!-- BOOKS -->
+      <section class="card" aria-label="Books Section">
+        <h2>Books</h2>
 
-      <div id="participantsStatus" class="muted" style="margin-top:10px;"></div>
-      <div id="participantsError" class="error hidden"></div>
+        <div class="actions">
+          <button id="btnLoadBooks">רשימת ספרים</button>
 
-      <ul id="participantsList" class="list hidden"></ul>
-    </section>
+          <input id="searchInput" type="text" placeholder="חיפוש לפי שם ספר / מזהה..." disabled />
 
-  </main>
+          <select id="sortSelect" disabled>
+            <option value="product_id_asc">מיון: מזהה עולה</option>
+            <option value="product_id_desc">מיון: מזהה יורד</option>
+            <option value="price_asc">מיון: מחיר עולה</option>
+            <option value="price_desc">מיון: מחיר יורד</option>
+            <option value="pages_asc">מיון: עמודים עולה</option>
+            <option value="pages_desc">מיון: עמודים יורד</option>
+            <option value="title_asc">מיון: שם (A→Z)</option>
+            <option value="title_desc">מיון: שם (Z→A)</option>
+          </select>
+        </div>
+
+        <div id="booksStatus" class="status hint">
+          לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים מה־DB.
+        </div>
+
+        <div id="booksTableWrap"></div>
+      </section>
+
+      <!-- PARTICIPANTS -->
+      <aside class="card" aria-label="Participants Section">
+        <h2>משתתפות</h2>
+
+        <div class="actions">
+          <button id="btnLoadParticipants">הצג משתתפים</button>
+        </div>
+
+        <div id="participantsStatus" class="status hint">
+          לחצי על <b>הצג משתתפים</b> כדי להציג את הרשימה.
+        </div>
+
+        <ul id="participantsList" class="list" style="display:none;"></ul>
+
+        <div class="hint" style="margin-top:12px;">
+          קישורים לבדיקה:<br/>
+          <span dir="ltr">/api/health</span> , <span dir="ltr">/api/books</span> , <span dir="ltr">/api/participants</span>
+        </div>
+      </aside>
+
+    </div>
+
+    <div class="footer">Library Database Project — Shira & Hodaya ©</div>
+  </div>
 
   <script>
-    // IMPORTANT:
-    // אם את מריצה מה-GitHub Pages – אי אפשר לקרוא ל-localhost.
-    // לכן: בזמן בדיקות מקומיות, תריצי את ה-Server ותשני לכתובת הזו:
-    // const API_BASE = "http://localhost:3000/api";
-    //
-    // אם בעתיד תעלי את השרת לענן – תשני פה לכתובת הענן.
-    const API_BASE = "http://localhost:3000/api";
+    // אם את מריצה מקומית: localhost
+    // אם בעתיד תעלי ל-Render: תשני לכאן את הכתובת של השרת (לדוגמה https://your-server.onrender.com)
+    const API_BASE = "http://localhost:3000";
 
-    const btnParticipants = document.getElementById("btnParticipants");
-    const btnHideParticipants = document.getElementById("btnHideParticipants");
-    const participantsList = document.getElementById("participantsList");
-    const participantsStatus = document.getElementById("participantsStatus");
-    const participantsError = document.getElementById("participantsError");
+    // ---------- Helpers ----------
+    async function fetchJson(path) {
+      const res = await fetch(API_BASE + path);
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || ("HTTP " + res.status));
+      }
+      return await res.json();
+    }
 
-    function show(el) { el.classList.remove("hidden"); }
-    function hide(el) { el.classList.add("hidden"); }
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
-    async function loadParticipants() {
-      participantsStatus.textContent = "טוען משתתפים...";
-      hide(participantsError);
+    // ---------- BOOKS ----------
+    const btnLoadBooks = document.getElementById("btnLoadBooks");
+    const booksStatus = document.getElementById("booksStatus");
+    const booksTableWrap = document.getElementById("booksTableWrap");
+    const searchInput = document.getElementById("searchInput");
+    const sortSelect = document.getElementById("sortSelect");
+
+    let allBooks = [];
+
+    function renderBooksTable(rows) {
+      if (!rows || rows.length === 0) {
+        booksTableWrap.innerHTML = "";
+        booksStatus.innerHTML = "<span class='error'>לא נמצאו ספרים.</span>";
+        return;
+      }
+
+      booksTableWrap.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>price</th>
+              <th>author_id</th>
+              <th>number_of_pages</th>
+              <th>title</th>
+              <th>product_id</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr>
+                <td>${escapeHtml(r.price)}</td>
+                <td>${escapeHtml(r.author_id)}</td>
+                <td>${escapeHtml(r.number_of_pages)}</td>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(r.product_id)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+      booksStatus.innerHTML = `<span class="ok">נטענו ${rows.length} ספרים בהצלחה.</span>`;
+    }
+
+    function applySearchAndSort() {
+      let rows = [...allBooks];
+
+      const q = (searchInput.value || "").trim().toLowerCase();
+      if (q) {
+        rows = rows.filter(b => {
+          const title = String(b.title ?? "").toLowerCase();
+          const id = String(b.product_id ?? "").toLowerCase();
+          return title.includes(q) || id.includes(q);
+        });
+      }
+
+      const v = sortSelect.value;
+      const getNum = (x) => Number(x ?? 0);
+
+      rows.sort((a, b) => {
+        switch (v) {
+          case "product_id_asc": return getNum(a.product_id) - getNum(b.product_id);
+          case "product_id_desc": return getNum(b.product_id) - getNum(a.product_id);
+          case "price_asc": return getNum(a.price) - getNum(b.price);
+          case "price_desc": return getNum(b.price) - getNum(a.price);
+          case "pages_asc": return getNum(a.number_of_pages) - getNum(b.number_of_pages);
+          case "pages_desc": return getNum(b.number_of_pages) - getNum(a.number_of_pages);
+          case "title_asc": return String(a.title ?? "").localeCompare(String(b.title ?? ""));
+          case "title_desc": return String(b.title ?? "").localeCompare(String(a.title ?? ""));
+          default: return 0;
+        }
+      });
+
+      renderBooksTable(rows);
+    }
+
+    btnLoadBooks.addEventListener("click", async () => {
+      booksStatus.textContent = "טוען ספרים מה־DB...";
+      booksTableWrap.innerHTML = "";
 
       try {
-        const res = await fetch(`${API_BASE}/participants`);
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data?.message || "Request failed");
-        }
-
-        // ניקוי
-        participantsList.innerHTML = "";
-
-        // מציג רשימה
-        data.forEach(p => {
-          const li = document.createElement("li");
-          li.textContent = p.full_name;
-          participantsList.appendChild(li);
-        });
-
-        participantsStatus.textContent = "✓ המשתתפים נטענו בהצלחה";
-        show(participantsList);
-
-        // כפתורי מצב
-        hide(btnParticipants);
-        show(btnHideParticipants);
-
-      } catch (err) {
-        participantsStatus.textContent = "";
-        participantsError.textContent = "שגיאה בטעינת משתתפים:\n" + err.message;
-        show(participantsError);
+        allBooks = await fetchJson("/api/books");
+        searchInput.disabled = false;
+        sortSelect.disabled = false;
+        applySearchAndSort();
+      } catch (e) {
+        searchInput.disabled = true;
+        sortSelect.disabled = true;
+        booksStatus.innerHTML = `<span class="error">שגיאה בטעינת ספרים: ${escapeHtml(e.message)}</span>`;
       }
-    }
+    });
 
-    function hideParticipants() {
-      hide(participantsList);
-      participantsStatus.textContent = "";
-      hide(participantsError);
+    searchInput.addEventListener("input", applySearchAndSort);
+    sortSelect.addEventListener("change", applySearchAndSort);
 
-      show(btnParticipants);
-      hide(btnHideParticipants);
-    }
+    // ---------- PARTICIPANTS ----------
+    const btnLoadParticipants = document.getElementById("btnLoadParticipants");
+    const participantsStatus = document.getElementById("participantsStatus");
+    const participantsList = document.getElementById("participantsList");
 
-    btnParticipants.addEventListener("click", loadParticipants);
-    btnHideParticipants.addEventListener("click", hideParticipants);
+    btnLoadParticipants.addEventListener("click", async () => {
+      participantsStatus.textContent = "טוען משתתפות...";
+      participantsList.style.display = "none";
+      participantsList.innerHTML = "";
+
+      try {
+        // מצופה מהשרת להחזיר מערך כמו:
+        // [ { name: "שירה זכרי" }, { name: "הודיה אסתר זכרי" } ]
+        const parts = await fetchJson("/api/participants");
+
+        participantsList.innerHTML = (parts || []).map(p => {
+          const name = (typeof p === "string") ? p : (p.name ?? "");
+          return `<li>${escapeHtml(name)}</li>`;
+        }).join("");
+
+        participantsList.style.display = "block";
+        participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
+      } catch (e) {
+        participantsStatus.innerHTML = `<span class="error">שגיאה בטעינת משתתפות: ${escapeHtml(e.message)}</span>`;
+      }
+    });
   </script>
 </body>
 </html>
