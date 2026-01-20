@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>פרויקט מסדי נתונים - ספרייה</title>
 
+  <link rel="stylesheet" href="style.css" />
+
   <style>
     body{
       margin:0;
@@ -21,12 +23,11 @@
       position:fixed;
       inset:0;
       background:
-        linear-gradient(0deg, rgba(0,0,0,.35), rgba(0,0,0,.35)),
-        url("bg-book.jpg");
+        linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.55)),
+        url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=2000&q=60");
       background-size:cover;
       background-position:center;
       z-index:-1;
-      filter: brightness(1.15) contrast(1.05);
     }
     .container{ width:min(1100px, 100%); }
     header{ text-align:center; margin-bottom:22px; }
@@ -36,17 +37,14 @@
       letter-spacing:.5px;
       text-shadow:0 6px 18px rgba(0,0,0,.35);
     }
-    header p{ margin:0; opacity:.92; text-shadow:0 6px 18px rgba(0,0,0,.35); }
+    header p{ margin:0; opacity:.9; text-shadow:0 6px 18px rgba(0,0,0,.35); }
 
     .grid{
       display:grid;
       grid-template-columns: 2fr 1fr;
       gap:18px;
-      align-items:start;
     }
-    @media (max-width: 900px){
-      .grid{ grid-template-columns:1fr; }
-    }
+    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
 
     .card{
       background:rgba(15, 25, 45, .55);
@@ -89,8 +87,6 @@
 
     .hint{ opacity:.9; font-size:13px; margin-top:8px; }
     .status{ margin-top:10px; font-size:13px; opacity:.95; }
-    .error{ color:#ffd2d2; font-weight:700; white-space:pre-wrap; }
-    .ok{ color:#d8ffd8; font-weight:700; }
 
     table{
       width:100%;
@@ -118,6 +114,8 @@
       opacity:.85;
       font-size:12px;
     }
+    .error{ color:#ffd2d2; font-weight:700; }
+    .ok{ color:#d8ffd8; font-weight:700; }
   </style>
 </head>
 
@@ -127,7 +125,7 @@
   <div class="container">
     <header>
       <h1>פרויקט מסדי נתונים – ספרייה</h1>
-      <p>הנתונים נטענים מה־MySQL דרך API (Node.js) ומתעדכנים לפי הנתונים במסד.</p>
+      <p>נתונים נשאבים מה־MySQL דרך API (Node.js) ומתעדכנים לפי מה שקיים במסד הנתונים.</p>
     </header>
 
     <div class="grid">
@@ -138,7 +136,9 @@
 
         <div class="actions">
           <button id="btnLoadBooks">רשימת ספרים</button>
+
           <input id="searchInput" type="text" placeholder="חיפוש לפי שם ספר / מזהה..." disabled />
+
           <select id="sortSelect" disabled>
             <option value="product_id_asc">מיון: מזהה עולה</option>
             <option value="product_id_desc">מיון: מזהה יורד</option>
@@ -151,7 +151,10 @@
           </select>
         </div>
 
-        <div id="booksStatus" class="status hint">לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים.</div>
+        <div id="booksStatus" class="status hint">
+          לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים מה־DB.
+        </div>
+
         <div id="booksTableWrap"></div>
       </section>
 
@@ -160,10 +163,13 @@
         <h2>משתתפות</h2>
 
         <div class="actions">
-          <button id="btnLoadParticipants">הצג משתתפות</button>
+          <button id="btnLoadParticipants">הצג משתתפים</button>
         </div>
 
-        <div id="participantsStatus" class="status hint">לחצי על <b>הצג משתתפות</b> כדי להציג את הרשימה.</div>
+        <div id="participantsStatus" class="status hint">
+          לחצי על <b>הצג משתתפים</b> כדי להציג את הרשימה.
+        </div>
+
         <ul id="participantsList" class="list" style="display:none;"></ul>
       </aside>
 
@@ -173,23 +179,25 @@
   </div>
 
   <script>
-    // =============================
-    // API BASE (Local / Render)
-    // =============================
+    // אם את על GitHub Pages, אסור localhost.
+    // כאן את שמה את הכתובת של השרת שלך ב-Render (או כל שרת אחר):
+    const RENDER_API = "PUT_YOUR_RENDER_URL_HERE"; // לדוגמה: https://your-app.onrender.com
 
-    // 🔥 חשוב: זו חייבת להיות הכתובת של השרת ב-Render של ה-API (ה-Web Service)
-    const RENDER_API = "https://final-project-1-4tg9.onrender.com";
+    const API_BASE = (location.hostname.includes("github.io"))
+      ? RENDER_API
+      : "http://localhost:3000";
 
-    const isLocal =
-      location.hostname === "localhost" ||
-      location.hostname === "127.0.0.1" ||
-      location.hostname === "" ||
-      location.protocol === "file:";
-
-    const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
+    async function fetchJson(path) {
+      const res = await fetch(API_BASE + path);
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || ("HTTP " + res.status));
+      }
+      return await res.json();
+    }
 
     function escapeHtml(str) {
-      return String(str ?? "")
+      return String(str)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -197,44 +205,19 @@
         .replaceAll("'", "&#039;");
     }
 
-    async function fetchJson(path) {
-      const url = API_BASE + path;
-      const res = await fetch(url, { cache: "no-store" });
-      const contentType = res.headers.get("content-type") || "";
-      const text = await res.text();
-
-      if (!res.ok) {
-        throw new Error(`Request failed: ${res.status}\nURL: ${url}\n${text}`);
-      }
-
-      // אם זו תגובת JSON:
-      if (contentType.includes("application/json")) {
-        return text ? JSON.parse(text) : null;
-      }
-
-      // אחרת נחזיר טקסט (כדי לראות שגיאות כמו "Cannot GET ...")
-      return { _raw: text, _url: url };
-    }
-
-    // =============================
-    // BUTTONS / ELEMENTS
-    // =============================
+    // ---------- BOOKS ----------
     const btnLoadBooks = document.getElementById("btnLoadBooks");
     const booksStatus = document.getElementById("booksStatus");
     const booksTableWrap = document.getElementById("booksTableWrap");
     const searchInput = document.getElementById("searchInput");
     const sortSelect = document.getElementById("sortSelect");
 
-    const btnLoadParticipants = document.getElementById("btnLoadParticipants");
-    const participantsStatus = document.getElementById("participantsStatus");
-    const participantsList = document.getElementById("participantsList");
-
     let allBooks = [];
 
     function renderBooksTable(rows) {
-      if (!Array.isArray(rows) || rows.length === 0) {
+      if (!rows || rows.length === 0) {
         booksTableWrap.innerHTML = "";
-        booksStatus.innerHTML = "<span class='error'>לא נמצאו ספרים / התקבלה תשובה לא צפויה.</span>";
+        booksStatus.innerHTML = "<span class='error'>לא נמצאו ספרים.</span>";
         return;
       }
 
@@ -242,21 +225,21 @@
         <table>
           <thead>
             <tr>
-              <th>product_id</th>
-              <th>title</th>
-              <th>number_of_pages</th>
-              <th>author_id</th>
               <th>price</th>
+              <th>author_id</th>
+              <th>number_of_pages</th>
+              <th>title</th>
+              <th>product_id</th>
             </tr>
           </thead>
           <tbody>
             ${rows.map(r => `
               <tr>
-                <td>${escapeHtml(r.product_id)}</td>
-                <td>${escapeHtml(r.title)}</td>
-                <td>${escapeHtml(r.number_of_pages)}</td>
-                <td>${escapeHtml(r.author_id)}</td>
                 <td>${escapeHtml(r.price)}</td>
+                <td>${escapeHtml(r.author_id)}</td>
+                <td>${escapeHtml(r.number_of_pages)}</td>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(r.product_id)}</td>
               </tr>
             `).join("")}
           </tbody>
@@ -297,37 +280,29 @@
       renderBooksTable(rows);
     }
 
-    // =============================
-    // EVENTS
-    // =============================
     btnLoadBooks.addEventListener("click", async () => {
-      booksStatus.textContent = "טוען ספרים מהשרת...";
+      booksStatus.textContent = "טוען ספרים מה־DB...";
       booksTableWrap.innerHTML = "";
 
       try {
-        // קודם נבדוק ping כדי לדעת שה-API באמת רץ
-        await fetchJson("/api/ping");
-
-        const data = await fetchJson("/api/books");
-
-        // אם חזרה טקסט/HTML (טעות), נציג אותו
-        if (data && data._raw) {
-          throw new Error(`תשובה לא צפויה מהשרת:\n${data._raw}`);
-        }
-
-        allBooks = data || [];
+        allBooks = await fetchJson("/api/books");
         searchInput.disabled = false;
         sortSelect.disabled = false;
         applySearchAndSort();
       } catch (e) {
         searchInput.disabled = true;
         sortSelect.disabled = true;
-        booksStatus.innerHTML = `<span class="error">${escapeHtml(e.message)}</span>`;
+        booksStatus.innerHTML = `<span class="error">שגיאה בטעינת ספרים: ${escapeHtml(e.message)}</span>`;
       }
     });
 
     searchInput.addEventListener("input", applySearchAndSort);
     sortSelect.addEventListener("change", applySearchAndSort);
+
+    // ---------- PARTICIPANTS ----------
+    const btnLoadParticipants = document.getElementById("btnLoadParticipants");
+    const participantsStatus = document.getElementById("participantsStatus");
+    const participantsList = document.getElementById("participantsList");
 
     btnLoadParticipants.addEventListener("click", async () => {
       participantsStatus.textContent = "טוען משתתפות...";
@@ -335,24 +310,20 @@
       participantsList.innerHTML = "";
 
       try {
-        await fetchJson("/api/ping");
+        const parts = await fetchJson("/api/participants");
 
-        const data = await fetchJson("/api/participants");
-
-        if (data && data._raw) {
-          throw new Error(`תשובה לא צפויה מהשרת:\n${data._raw}`);
-        }
-
-        const parts = data || [];
-        participantsList.innerHTML = parts.map(p => {
-          const name = (typeof p === "string") ? p : (p.full_name ?? p.name ?? "");
+        participantsList.innerHTML = (parts || []).map(p => {
+          // תומך גם ב: { full_name: "..." } וגם ב: { name: "..." } וגם במחרוזת
+          const name =
+            (typeof p === "string") ? p :
+            (p.full_name ?? p.name ?? "");
           return `<li>${escapeHtml(name)}</li>`;
         }).join("");
 
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
       } catch (e) {
-        participantsStatus.innerHTML = `<span class="error">${escapeHtml(e.message)}</span>`;
+        participantsStatus.innerHTML = `<span class="error">שגיאה בטעינת משתתפות: ${escapeHtml(e.message)}</span>`;
       }
     });
   </script>
