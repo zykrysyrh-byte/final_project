@@ -178,7 +178,11 @@
     // אם את בודקת מקומית (כששרת רץ אצלך): "http://localhost:3000"
     // אם את בודקת דרך GitHub Pages: כאן חייב להיות ה-URL של Render (https)
     // =========================
-    const API_BASE = "http://localhost:3000"; // <-- תשני לכתובת ה-Render כשעובדים דרך GitHub Pages
+    const API_BASE =
+  (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+    ? "http://localhost:3000"
+    : "https://final-project-lqft.onrender.com";
+// <-- תשני לכתובת ה-Render כשעובדים דרך GitHub Pages
 
     async function fetchJson(path) {
       const url = API_BASE + path;
@@ -335,3 +339,4 @@
   </script>
 </body>
 </html>
+
