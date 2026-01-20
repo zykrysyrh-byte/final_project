@@ -1,147 +1,150 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Library Database Project</title>
- <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <title>פרויקט מסדי נתונים – ספרייה</title>
+
+    <!-- חיבור לקובץ העיצוב -->
+    <link rel="stylesheet" href="style.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
-  <header class="header">
-    <div class="container">
-      <h1>פרויקט מסדי נתונים – ספרייה</h1>
-      <p class="sub">
-        מסד נתונים: <span class="pill" id="dbName">final_project</span>
-      </p>
-      <div class="meta">
-        <div class="card">
-          <div class="label">משתתפות</div>
-          <div class="value">שירה, הודיה</div>
-        </div>
-        <div class="card">
-          <div class="label">מה מוצג באתר</div>
-          <div class="value">רשימת ספרים ממסד הנתונים (דמו)</div>
-        </div>
-      </div>
-      <div class="actions">
-        <button id="loadBtn" class="btn">רשימת ספרים</button>
-        <button id="clearBtn" class="btn btn-ghost">ניקוי</button>
-      </div>
-    </div>
-  </header>
 
-  <main class="container">
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Books</h2>
-        <div class="hint">לחצי על “רשימת ספרים” כדי לטעון נתונים</div>
-      </div>
+<header class="hero">
+    <h1>פרויקט מסדי נתונים – ספרייה 📚</h1>
+    <p class="subtitle">
+        מערכת לניהול ספרים, כרכים ורכישות<br>
+        קורס מסדי נתונים
+    </p>
+</header>
 
-      <div class="toolbar">
-        <input id="search" class="input" placeholder="חיפוש לפי שם ספר / מזהה..." />
-        <select id="sort" class="input">
-          <option value="id_asc">מיון: מזהה עולה</option>
-          <option value="id_desc">מיון: מזהה יורד</option>
-          <option value="title_asc">מיון: כותר עולה (A→Z)</option>
-          <option value="title_desc">מיון: כותר יורד (Z→A)</option>
+<section class="card">
+    <h2>🎯 מטרת הפרויקט</h2>
+    <p>
+        פרויקט זה מדגים בניית מסד נתונים עבור ספרייה, כולל:
+        ספרים עם מספר כרכים, לקוחות, רכישות ושאילתות SQL מתקדמות.
+    </p>
+    <p>
+        הקישור נועד להמחיש אינטראקציה עם נתוני הספרים,
+        בדומה לדרישות <strong>שאלה 7</strong>.
+    </p>
+</section>
+
+<section class="card">
+    <h2>👩‍💻 משתתפות</h2>
+    <ul>
+        <li>שירה</li>
+        <li>הודיה</li>
+    </ul>
+</section>
+
+<section class="card">
+    <h2>📖 רשימת ספרים</h2>
+
+    <div class="controls">
+        <input
+            type="text"
+            id="search"
+            placeholder="חיפוש לפי שם ספר..."
+        >
+
+        <select id="sort">
+            <option value="id_asc">מיון לפי מזהה ↑</option>
+            <option value="id_desc">מיון לפי מזהה ↓</option>
+            <option value="title_asc">מיון לפי שם א-ת</option>
+            <option value="title_desc">מיון לפי שם ת-א</option>
         </select>
-      </div>
 
-      <div id="status" class="status">אין נתונים עדיין.</div>
-      <div id="grid" class="grid"></div>
-    </section>
+        <button id="load">טען ספרים</button>
+        <button id="clear">נקה</button>
+    </div>
 
-    <footer class="footer">
-      <small>© Library Database Project — Shira & Hodaya</small>
-    </footer>
-  </main>
+    <p id="status" class="status"></p>
 
-  <script>
+    <div id="grid" class="grid"></div>
+</section>
+
+<footer>
+    Library Database Project — Shira & Hodaya ©
+</footer>
+
+<script>
+    let books = [];
+
+    const loadBtn = document.getElementById("load");
+    const clearBtn = document.getElementById("clear");
     const grid = document.getElementById("grid");
     const statusEl = document.getElementById("status");
-    const loadBtn = document.getElementById("loadBtn");
-    const clearBtn = document.getElementById("clearBtn");
     const searchEl = document.getElementById("search");
     const sortEl = document.getElementById("sort");
 
-    let books = [];
-
     function render(list) {
-      grid.innerHTML = "";
-      if (!list.length) {
-        statusEl.textContent = "לא נמצאו ספרים להצגה.";
-        return;
-      }
-      statusEl.textContent = `מציגה ${list.length} ספרים.`;
+        grid.innerHTML = "";
 
-      for (const b of list) {
-        const el = document.createElement("div");
-        el.className = "book";
-        el.innerHTML = `
-          <div class="book-top">
-            <div class="book-title">${escapeHtml(b.title)}</div>
-            <div class="book-id">#${b.product_id}</div>
-          </div>
-          <div class="book-meta">
-            <div><span>עמודים:</span> ${b.number_of_pages}</div>
-            <div><span>מחיר:</span> ₪${Number(b.price).toFixed(2)}</div>
-            <div><span>סופר (ID):</span> ${b.author_id}</div>
-          </div>
-        `;
-        grid.appendChild(el);
-      }
+        if (list.length === 0) {
+            grid.innerHTML = "<p>לא נמצאו ספרים</p>";
+            return;
+        }
+
+        list.forEach(b => {
+            const div = document.createElement("div");
+            div.className = "book-card";
+            div.innerHTML = `
+                <h3>${b.title}</h3>
+                <p><strong>מזהה:</strong> ${b.product_id}</p>
+                <p><strong>מחיר:</strong> ${b.price} ₪</p>
+                <p><strong>מספר כרכים:</strong> ${b.volumes}</p>
+            `;
+            grid.appendChild(div);
+        });
     }
 
     function applyFilters() {
-      const q = (searchEl.value || "").trim().toLowerCase();
-      let list = [...books];
+        let list = [...books];
 
-      if (q) {
-        list = list.filter(b =>
-          String(b.product_id).includes(q) ||
-          (b.title || "").toLowerCase().includes(q)
-        );
-      }
+        const q = searchEl.value.trim().toLowerCase();
+        if (q) {
+            list = list.filter(b =>
+                b.title.toLowerCase().includes(q)
+            );
+        }
 
-      const sort = sortEl.value;
-      list.sort((a,b) => {
-        if (sort === "id_asc") return a.product_id - b.product_id;
-        if (sort === "id_desc") return b.product_id - a.product_id;
-        if (sort === "title_asc") return (a.title||"").localeCompare(b.title||"");
-        if (sort === "title_desc") return (b.title||"").localeCompare(a.title||"");
-        return 0;
-      });
+        const sort = sortEl.value;
+        list.sort((a, b) => {
+            if (sort === "id_asc") return a.product_id - b.product_id;
+            if (sort === "id_desc") return b.product_id - a.product_id;
+            if (sort === "title_asc") return a.title.localeCompare(b.title);
+            if (sort === "title_desc") return b.title.localeCompare(a.title);
+            return 0;
+        });
 
-      render(list);
-    }
-
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-      }[m]));
+        render(list);
     }
 
     loadBtn.addEventListener("click", async () => {
-      statusEl.textContent = "טוענת נתונים...";
-      try {
-        const res = await fetch("books.json", { cache: "no-store" });
-        books = await res.json();
-        applyFilters();
-      } catch (e) {
-        statusEl.textContent = "שגיאה בטעינת books.json";
-      }
+        statusEl.textContent = "טוען נתונים...";
+        try {
+            const res = await fetch("books.json", { cache: "no-store" });
+            books = await res.json();
+            statusEl.textContent = "הנתונים נטענו בהצלחה ✔";
+            applyFilters();
+        } catch (e) {
+            statusEl.textContent = "שגיאה בטעינת books.json";
+        }
     });
 
     clearBtn.addEventListener("click", () => {
-      books = [];
-      searchEl.value = "";
-      statusEl.textContent = "אין נתונים עדיין.";
-      grid.innerHTML = "";
+        books = [];
+        grid.innerHTML = "";
+        searchEl.value = "";
+        statusEl.textContent = "המסך נוקה";
     });
 
     searchEl.addEventListener("input", applyFilters);
     sortEl.addEventListener("change", applyFilters);
-  </script>
+</script>
+
 </body>
 </html>
-
