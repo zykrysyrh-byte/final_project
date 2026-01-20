@@ -183,23 +183,23 @@
 
   <script>
     // =============================
-    // API BASE (Local / GitHub Pages)
+    // API BASE (Local / Anywhere)
     // =============================
-    // אם זה GitHub Pages -> נלך ל-Render
-    // אם זה Local (קובץ/localhost) -> נלך ל-localhost:3000
-    const RENDER_API = "https://final-project-lqft.onrender.com"; // אם זה שונה אצלך - תשני רק פה
+    // שימי כאן את הכתובת של השרת שלך ב-Render (זו שמופיעה ב-Dashboard)
+    const RENDER_API = "https://final-project-1-4tg9.onrender.com";
+
+    // אם רצים לוקאלית -> localhost
+    // אחרת (GitHub Pages / טלפון / כל מקום) -> Render
     const API_BASE =
-      (location.hostname.includes("github.io"))
-        ? RENDER_API
-        : "http://localhost:3000";
+      (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+        ? "http://localhost:3000"
+        : RENDER_API;
 
     async function fetchJson(path) {
       const res = await fetch(API_BASE + path, { cache: "no-store" });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || ("HTTP " + res.status));
-      }
-      return await res.json();
+      const text = await res.text(); // כדי שנראה הודעת שגיאה אמיתית אם יש
+      if (!res.ok) throw new Error(text || ("HTTP " + res.status));
+      return text ? JSON.parse(text) : null;
     }
 
     function escapeHtml(str) {
@@ -322,10 +322,10 @@
       try {
         const parts = await fetchJson("/api/participants");
 
-        participantsList.innerHTML = (parts || []).map(p => {
-          const name = (typeof p === "string") ? p : (p.full_name ?? p.name ?? "");
-          return `<li>${escapeHtml(name)}</li>`;
-        }).join("");
+        // השרת שלך מחזיר full_name, אז קוראים את זה קודם
+        const names = (parts || []).map(p => (p && (p.full_name ?? p.name ?? "")) ).filter(Boolean);
+
+        participantsList.innerHTML = names.map(name => `<li>${escapeHtml(name)}</li>`).join("");
 
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
