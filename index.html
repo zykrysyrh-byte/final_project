@@ -63,7 +63,6 @@
       align-items:center;
       margin-bottom:10px;
     }
-
     button{
       border:0;
       border-radius:12px;
@@ -108,12 +107,7 @@
     .list{ margin:10px 0 0 0; padding:0 18px 0 0; }
     .list li{ margin:8px 0; }
 
-    .footer{
-      margin-top:16px;
-      text-align:center;
-      opacity:.85;
-      font-size:12px;
-    }
+    .footer{ margin-top:16px; text-align:center; opacity:.85; font-size:12px; }
     .error{ color:#ffd2d2; font-weight:700; }
     .ok{ color:#d8ffd8; font-weight:700; }
   </style>
@@ -179,21 +173,30 @@
   </div>
 
   <script>
-    // אם את על GitHub Pages, אסור localhost.
-    // כאן את שמה את הכתובת של השרת שלך ב-Render (או כל שרת אחר):
-    const RENDER_API = "PUT_YOUR_RENDER_URL_HERE"; // לדוגמה: https://your-app.onrender.com
-
-    const API_BASE = (location.hostname.includes("github.io"))
-      ? RENDER_API
-      : "http://localhost:3000";
+    // =========================
+    // חשוב:
+    // אם את בודקת מקומית (כששרת רץ אצלך): "http://localhost:3000"
+    // אם את בודקת דרך GitHub Pages: כאן חייב להיות ה-URL של Render (https)
+    // =========================
+    const API_BASE = "http://localhost:3000"; // <-- תשני לכתובת ה-Render כשעובדים דרך GitHub Pages
 
     async function fetchJson(path) {
-      const res = await fetch(API_BASE + path);
+      const url = API_BASE + path;
+      const res = await fetch(url);
+
+      const contentType = res.headers.get("content-type") || "";
+      const text = await res.text();
+
       if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || ("HTTP " + res.status));
+        throw new Error(text || ("HTTP " + res.status));
       }
-      return await res.json();
+
+      // אם קיבלנו HTML במקום JSON – זו בדיוק הבעיה של API_BASE / שרת
+      if (!contentType.includes("application/json")) {
+        throw new Error("השרת לא החזיר JSON. כנראה API_BASE לא נכון או שהשרת לא רץ.");
+      }
+
+      return JSON.parse(text);
     }
 
     function escapeHtml(str) {
@@ -225,21 +228,21 @@
         <table>
           <thead>
             <tr>
-              <th>price</th>
-              <th>author_id</th>
-              <th>number_of_pages</th>
-              <th>title</th>
               <th>product_id</th>
+              <th>title</th>
+              <th>number_of_pages</th>
+              <th>author_id</th>
+              <th>price</th>
             </tr>
           </thead>
           <tbody>
             ${rows.map(r => `
               <tr>
-                <td>${escapeHtml(r.price)}</td>
-                <td>${escapeHtml(r.author_id)}</td>
-                <td>${escapeHtml(r.number_of_pages)}</td>
-                <td>${escapeHtml(r.title)}</td>
                 <td>${escapeHtml(r.product_id)}</td>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(r.number_of_pages)}</td>
+                <td>${escapeHtml(r.author_id)}</td>
+                <td>${escapeHtml(r.price)}</td>
               </tr>
             `).join("")}
           </tbody>
@@ -312,11 +315,14 @@
       try {
         const parts = await fetchJson("/api/participants");
 
+        // תומך בכל אחד מהפורמטים:
+        // ["שירה זכרי","הודיה אסתר זכרי"]
+        // [{name:"..."}, ...]
+        // [{full_name:"..."}, ...]
         participantsList.innerHTML = (parts || []).map(p => {
-          // תומך גם ב: { full_name: "..." } וגם ב: { name: "..." } וגם במחרוזת
           const name =
             (typeof p === "string") ? p :
-            (p.full_name ?? p.name ?? "");
+            (p.name ?? p.full_name ?? p.fullName ?? "");
           return `<li>${escapeHtml(name)}</li>`;
         }).join("");
 
