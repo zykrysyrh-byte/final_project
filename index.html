@@ -91,7 +91,7 @@
 
     .hint{ opacity:.9; font-size:13px; margin-top:8px; }
     .status{ margin-top:10px; font-size:13px; opacity:.95; }
-    .error{ color:#ffd2d2; font-weight:700; }
+    .error{ color:#ffd2d2; font-weight:700; white-space:pre-wrap; }
     .ok{ color:#d8ffd8; font-weight:700; }
 
     table{
@@ -186,23 +186,34 @@
     // =============================
     // API BASE (Local / Render / GitHub Pages)
     // =============================
-    // כאן שמים את הכתובת של השרת ב-Render:
+    // שימי כאן את הכתובת של השירות שעובד ב-Render:
     const RENDER_API = "https://final-project-1-4tg9.onrender.com";
 
-    // אם את על המחשב מקומית (localhost / 127.0.0.1 / file://) -> לוקאלי
+    // Local אם זה: localhost / 127.0.0.1 / file://
     const isLocal =
       location.hostname === "localhost" ||
       location.hostname === "127.0.0.1" ||
-      location.hostname === "" ||
       location.protocol === "file:";
 
     const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
 
     async function fetchJson(path) {
-      const res = await fetch(API_BASE + path, { cache: "no-store" });
+      const url = API_BASE + path;
+      const res = await fetch(url, { cache: "no-store" });
+
+      // חשוב: לקרוא כ-text ואז לנסות JSON (כדי לתפוס "Cannot GET ..." בצורה יפה)
       const text = await res.text();
-      if (!res.ok) throw new Error(text || ("HTTP " + res.status));
-      return text ? JSON.parse(text) : null;
+
+      if (!res.ok) {
+        throw new Error(text || ("HTTP " + res.status));
+      }
+
+      // אם השרת החזיר טקסט שהוא לא JSON - נזרוק שגיאה ברורה
+      try {
+        return text ? JSON.parse(text) : null;
+      } catch {
+        throw new Error("השרת לא החזיר JSON. התקבל:\n" + text);
+      }
     }
 
     function escapeHtml(str) {
@@ -226,7 +237,7 @@
     let allBooks = [];
 
     function renderBooksTable(rows) {
-      if (!rows || rows.length === 0) {
+      if (!Array.isArray(rows) || rows.length === 0) {
         booksTableWrap.innerHTML = "";
         booksStatus.innerHTML = "<span class='error'>לא נמצאו ספרים.</span>";
         return;
@@ -260,7 +271,7 @@
     }
 
     function applySearchAndSort() {
-      let rows = [...allBooks];
+      let rows = Array.isArray(allBooks) ? [...allBooks] : [];
 
       const q = (searchInput.value || "").trim().toLowerCase();
       if (q) {
@@ -296,14 +307,22 @@
       booksTableWrap.innerHTML = "";
 
       try {
-        allBooks = await fetchJson("/api/books");
+        const data = await fetchJson("/api/books");
+
+        // אם השרת מחזיר {ok:false,...} במקום מערך
+        if (!Array.isArray(data) && data && data.ok === false) {
+          throw new Error((data.message || "DB_QUERY_FAILED") + (data.error ? ("\n" + data.error) : ""));
+        }
+
+        allBooks = Array.isArray(data) ? data : [];
         searchInput.disabled = false;
         sortSelect.disabled = false;
         applySearchAndSort();
       } catch (e) {
         searchInput.disabled = true;
         sortSelect.disabled = true;
-        booksStatus.innerHTML = `<span class="error">שגיאה בטעינת ספרים: ${escapeHtml(e.message)}</span>`;
+        booksStatus.innerHTML =
+          `<span class="error">שגיאה בטעינת ספרים:\n${escapeHtml(e.message)}</span>`;
       }
     });
 
@@ -325,7 +344,13 @@
       try {
         const parts = await fetchJson("/api/participants");
 
-        participantsList.innerHTML = (parts || []).map(p => {
+        // אם השרת מחזיר אובייקט שגיאה
+        if (!Array.isArray(parts) && parts && parts.ok === false) {
+          throw new Error(parts.message || "שגיאה מהשרת");
+        }
+
+        const arr = Array.isArray(parts) ? parts : [];
+        participantsList.innerHTML = arr.map(p => {
           const name = (typeof p === "string") ? p : (p.full_name ?? p.name ?? "");
           return `<li>${escapeHtml(name)}</li>`;
         }).join("");
@@ -333,7 +358,8 @@
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
       } catch (e) {
-        participantsStatus.innerHTML = `<span class="error">שגיאה בטעינת משתתפות: ${escapeHtml(e.message)}</span>`;
+        participantsStatus.innerHTML =
+          `<span class="error">שגיאה בטעינת משתתפות:\n${escapeHtml(e.message)}</span>`;
       }
     });
   </script>
