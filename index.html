@@ -23,11 +23,12 @@
       position:fixed;
       inset:0;
       background:
-        linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.55)),
+        linear-gradient(0deg, rgba(0,0,0,.35), rgba(0,0,0,.35)),
         url("bg-book.jpg");
       background-size:cover;
       background-position:center;
       z-index:-1;
+      filter: brightness(1.15) contrast(1.05);
     }
     .container{ width:min(1100px, 100%); }
     header{ text-align:center; margin-bottom:22px; }
@@ -37,7 +38,7 @@
       letter-spacing:.5px;
       text-shadow:0 6px 18px rgba(0,0,0,.35);
     }
-    header p{ margin:0; opacity:.9; text-shadow:0 6px 18px rgba(0,0,0,.35); }
+    header p{ margin:0; opacity:.92; text-shadow:0 6px 18px rgba(0,0,0,.35); }
 
     .grid{
       display:grid;
@@ -128,7 +129,7 @@
   <div class="container">
     <header>
       <h1>פרויקט מסדי נתונים – ספרייה</h1>
-      <p>נתונים נשאבים מה־MySQL דרך API (Node.js) ומתעדכנים לפי מה שקיים במסד הנתונים.</p>
+      <p>הנתונים נטענים מה־MySQL דרך API (Node.js) ומתעדכנים לפי הנתונים במסד.</p>
     </header>
 
     <div class="grid">
@@ -183,21 +184,23 @@
 
   <script>
     // =============================
-    // API BASE (Local / Anywhere)
+    // API BASE (Local / Render / GitHub Pages)
     // =============================
-    // שימי כאן את הכתובת של השרת שלך ב-Render (זו שמופיעה ב-Dashboard)
+    // כאן שמים את הכתובת של השרת ב-Render:
     const RENDER_API = "https://final-project-1-4tg9.onrender.com";
 
-    // אם רצים לוקאלית -> localhost
-    // אחרת (GitHub Pages / טלפון / כל מקום) -> Render
-    const API_BASE =
-      (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-        ? "http://localhost:3000"
-        : RENDER_API;
+    // אם את על המחשב מקומית (localhost / 127.0.0.1 / file://) -> לוקאלי
+    const isLocal =
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1" ||
+      location.hostname === "" ||
+      location.protocol === "file:";
+
+    const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
 
     async function fetchJson(path) {
       const res = await fetch(API_BASE + path, { cache: "no-store" });
-      const text = await res.text(); // כדי שנראה הודעת שגיאה אמיתית אם יש
+      const text = await res.text();
       if (!res.ok) throw new Error(text || ("HTTP " + res.status));
       return text ? JSON.parse(text) : null;
     }
@@ -233,21 +236,21 @@
         <table>
           <thead>
             <tr>
-              <th>price</th>
-              <th>author_id</th>
-              <th>number_of_pages</th>
-              <th>title</th>
               <th>product_id</th>
+              <th>title</th>
+              <th>number_of_pages</th>
+              <th>author_id</th>
+              <th>price</th>
             </tr>
           </thead>
           <tbody>
             ${rows.map(r => `
               <tr>
-                <td>${escapeHtml(r.price)}</td>
-                <td>${escapeHtml(r.author_id)}</td>
-                <td>${escapeHtml(r.number_of_pages)}</td>
-                <td>${escapeHtml(r.title)}</td>
                 <td>${escapeHtml(r.product_id)}</td>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(r.number_of_pages)}</td>
+                <td>${escapeHtml(r.author_id)}</td>
+                <td>${escapeHtml(r.price)}</td>
               </tr>
             `).join("")}
           </tbody>
@@ -322,10 +325,10 @@
       try {
         const parts = await fetchJson("/api/participants");
 
-        // השרת שלך מחזיר full_name, אז קוראים את זה קודם
-        const names = (parts || []).map(p => (p && (p.full_name ?? p.name ?? "")) ).filter(Boolean);
-
-        participantsList.innerHTML = names.map(name => `<li>${escapeHtml(name)}</li>`).join("");
+        participantsList.innerHTML = (parts || []).map(p => {
+          const name = (typeof p === "string") ? p : (p.full_name ?? p.name ?? "");
+          return `<li>${escapeHtml(name)}</li>`;
+        }).join("");
 
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
