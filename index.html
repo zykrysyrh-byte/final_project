@@ -27,6 +27,7 @@
         url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=2000&q=60");
       background-size:cover;
       background-position:center;
+      filter:saturate(1.1);
       z-index:-1;
     }
     .container{ width:min(1100px, 100%); }
@@ -63,6 +64,7 @@
       align-items:center;
       margin-bottom:10px;
     }
+
     button{
       border:0;
       border-radius:12px;
@@ -86,6 +88,8 @@
 
     .hint{ opacity:.9; font-size:13px; margin-top:8px; }
     .status{ margin-top:10px; font-size:13px; opacity:.95; }
+    .error{ color:#ffd2d2; font-weight:700; }
+    .ok{ color:#d8ffd8; font-weight:700; }
 
     table{
       width:100%;
@@ -107,9 +111,12 @@
     .list{ margin:10px 0 0 0; padding:0 18px 0 0; }
     .list li{ margin:8px 0; }
 
-    .footer{ margin-top:16px; text-align:center; opacity:.85; font-size:12px; }
-    .error{ color:#ffd2d2; font-weight:700; }
-    .ok{ color:#d8ffd8; font-weight:700; }
+    .footer{
+      margin-top:16px;
+      text-align:center;
+      opacity:.85;
+      font-size:12px;
+    }
   </style>
 </head>
 
@@ -130,9 +137,7 @@
 
         <div class="actions">
           <button id="btnLoadBooks">רשימת ספרים</button>
-
           <input id="searchInput" type="text" placeholder="חיפוש לפי שם ספר / מזהה..." disabled />
-
           <select id="sortSelect" disabled>
             <option value="product_id_asc">מיון: מזהה עולה</option>
             <option value="product_id_desc">מיון: מזהה יורד</option>
@@ -173,35 +178,21 @@
   </div>
 
   <script>
-    // =========================
-    // חשוב:
-    // אם את בודקת מקומית (כששרת רץ אצלך): "http://localhost:3000"
-    // אם את בודקת דרך GitHub Pages: כאן חייב להיות ה-URL של Render (https)
-    // =========================
-  const API_BASE =
-  location.hostname.includes("github.io")
-    ? "https://final-project-lqft.onrender.com"
-    : "http://localhost:3000";
-
-
+    // עובד אוטומטית:
+    // - בלוקאלי: http://localhost:3000
+    // - ב-GitHub Pages: הולך ל-Render (שני את ה-URL אם השירות שלך שונה)
+    const API_BASE =
+      location.hostname.includes("github.io")
+        ? "https://final-project-lqft.onrender.com"
+        : "http://localhost:3000";
 
     async function fetchJson(path) {
-      const url = API_BASE + path;
-      const res = await fetch(url);
-
-      const contentType = res.headers.get("content-type") || "";
-      const text = await res.text();
-
+      const res = await fetch(API_BASE + path);
       if (!res.ok) {
-        throw new Error(text || ("HTTP " + res.status));
+        const txt = await res.text();
+        throw new Error(txt || ("HTTP " + res.status));
       }
-
-      // אם קיבלנו HTML במקום JSON – זו בדיוק הבעיה של API_BASE / שרת
-      if (!contentType.includes("application/json")) {
-        throw new Error("השרת לא החזיר JSON. כנראה API_BASE לא נכון או שהשרת לא רץ.");
-      }
-
-      return JSON.parse(text);
+      return await res.json();
     }
 
     function escapeHtml(str) {
@@ -320,16 +311,12 @@
       try {
         const parts = await fetchJson("/api/participants");
 
-        // תומך בכל אחד מהפורמטים:
-        // ["שירה זכרי","הודיה אסתר זכרי"]
-        // [{name:"..."}, ...]
-        // [{full_name:"..."}, ...]
-        participantsList.innerHTML = (parts || []).map(p => {
-          const name =
-            (typeof p === "string") ? p :
-            (p.name ?? p.full_name ?? p.fullName ?? "");
-          return `<li>${escapeHtml(name)}</li>`;
-        }).join("");
+        const names = (parts || []).map(p => {
+          if (typeof p === "string") return p;
+          return (p.full_name ?? p.name ?? "");
+        }).filter(Boolean);
+
+        participantsList.innerHTML = names.map(n => `<li>${escapeHtml(n)}</li>`).join("");
 
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
@@ -340,6 +327,3 @@
   </script>
 </body>
 </html>
-
-
-
