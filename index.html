@@ -2,173 +2,198 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>פרויקט מסדי נתונים – ספרייה</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>פרויקט מסדי נתונים — ספרייה</title>
 
-  <!-- אם יש לך style.css בתיקיה – זה יפעל -->
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- אם אין/לא עובד CSS – זה מינימום עיצוב פנימי -->
   <style>
     :root{
-      --glass: rgba(20, 26, 40, .55);
-      --border: rgba(255,255,255,.18);
+      --bg: rgba(255,255,255,.14);
+      --bg2: rgba(255,255,255,.10);
+      --border: rgba(255,255,255,.22);
       --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.70);
-      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --muted: rgba(255,255,255,.72);
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
       --radius: 18px;
     }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
+
+    *{ box-sizing: border-box; }
+    html, body{ height: 100%; }
     body{
       margin:0;
-      color:var(--text);
       font-family: system-ui, -apple-system, "Segoe UI", Arial;
+      color: var(--text);
+
+      /* רקע בהיר יותר + תמונה יותר בולטת */
       background:
-        linear-gradient(rgba(10,12,18,.35), rgba(10,12,18,.35)),
+        linear-gradient(rgba(10,12,18,.40), rgba(10,12,18,.55)),
         url("bg-book.jpg");
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
     }
-    .wrap{ max-width:1100px; margin:0 auto; padding:28px 18px 40px; }
-    .header{
-      text-align:center;
-      margin-bottom:18px;
+
+    .wrap{
+      width: min(1120px, 94vw);
+      margin: 34px auto 40px;
     }
-    .header h1{
-      margin:0 0 8px;
-      font-size:40px;
-      font-weight:800;
-      letter-spacing:.3px;
-      text-shadow: 0 10px 30px rgba(0,0,0,.55);
+
+    header{
+      text-align: center;
+      margin-bottom: 18px;
     }
-    .header .sub{
-      margin:0;
-      color:var(--muted);
-      font-size:14px;
+    h1{
+      margin: 0 0 8px;
+      font-size: 34px;
+      letter-spacing: .3px;
+      text-shadow: 0 10px 25px rgba(0,0,0,.35);
     }
+    .sub{
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
     .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:16px;
-      margin-top:16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
     }
-    @media (min-width: 900px){
-      .grid{ grid-template-columns: 360px 1fr; }
-    }
+
     .card{
-      background: var(--glass);
-      border:1px solid var(--border);
+      background: var(--bg);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
+      padding: 16px;
       backdrop-filter: blur(10px);
-      padding:16px;
     }
+
     .card h2{
-      margin:0 0 12px;
-      font-size:18px;
+      margin: 0 0 10px;
+      font-size: 20px;
     }
+
     .row{
       display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-bottom:10px;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
     }
-    input, select, button{
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.20);
-      background: rgba(0,0,0,.20);
-      color: var(--text);
-      padding:10px 12px;
-      outline:none;
-    }
-    input::placeholder{ color: rgba(255,255,255,.55); }
+
     button{
-      cursor:pointer;
-      font-weight:700;
+      border: 1px solid var(--border);
       background: rgba(255,255,255,.12);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
     }
     button:hover{ background: rgba(255,255,255,.18); }
-    .status{
-      margin-top:8px;
+
+    .pill{
+      display:inline-block;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
       color: var(--muted);
-      font-size:13px;
-      min-height:18px;
+      font-size: 13px;
     }
+
+    .status{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
     table{
-      width:100%;
+      width: 100%;
       border-collapse: collapse;
-      overflow:hidden;
+      margin-top: 10px;
+      overflow: hidden;
       border-radius: 14px;
     }
     thead th{
-      text-align:right;
-      font-size:13px;
-      color: rgba(255,255,255,.78);
-      padding:12px 10px;
-      border-bottom:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
+      text-align: right;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.14);
     }
     tbody td{
-      padding:12px 10px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      font-size:14px;
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      font-size: 14px;
     }
-    tbody tr:hover{ background: rgba(255,255,255,.05); }
-    .footer{
+    tbody tr:hover{
+      background: rgba(255,255,255,.06);
+    }
+
+    ul{
+      margin: 8px 18px 0 0;
+      padding: 0;
+    }
+    li{
+      margin: 6px 0;
+      color: var(--text);
+    }
+
+    footer{
       text-align:center;
-      margin-top:18px;
-      color: rgba(255,255,255,.55);
-      font-size:13px;
+      color: var(--muted);
+      margin-top: 18px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+      h1{ font-size: 28px; }
     }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="header">
-      <h1>פרויקט מסדי נתונים – ספרייה</h1>
-      <p class="sub">הנתונים נטענים ישירות מ־MySQL דרך API (עדכון ב־SQL ⇒ עדכון בתצוגה)</p>
-    </div>
+    <header>
+      <h1>פרויקט מסדי נתונים — ספרייה</h1>
+      <div class="sub">
+        ממשק Web שמציג מידע ממסד הנתונים דרך API מקומי (MySQL).<br/>
+        <span class="pill">DB: <span id="dbName">final_project</span></span>
+      </div>
+    </header>
 
     <div class="grid">
-      <!-- חיפוש / מיון -->
-      <div class="card">
-        <h2>חיפוש ומיון</h2>
-
-        <div class="row">
-          <input id="search" type="text" placeholder="חיפוש לפי שם ספר / מזהה..." style="flex:1; min-width:180px;">
+      <section class="card">
+        <h2>המסך הראשי</h2>
+        <div class="sub">
+          השתמשי בכפתורים כדי להציג נתונים. הנתונים נטענים מהשרת רק בעת לחיצה,
+          ולכן שינוי במסד הנתונים ישתקף בתוצאה.
         </div>
 
         <div class="row">
-          <select id="sort" style="flex:1; min-width:180px;">
-            <option value="id_asc">מיון: מזהה עולה</option>
-            <option value="id_desc">מיון: מזהה יורד</option>
-            <option value="title_asc">מיון: כותרת א-ת</option>
-            <option value="title_desc">מיון: כותרת ת-א</option>
-            <option value="price_asc">מיון: מחיר עולה</option>
-            <option value="price_desc">מיון: מחיר יורד</option>
-          </select>
+          <button id="btnParticipants">משתתפות</button>
+          <button id="btnBooks">רשימת ספרים</button>
+          <button id="btnClear">ניקוי</button>
         </div>
 
-        <div class="row">
-          <button id="reload">רענון</button>
-          <button id="clear">ניקוי</button>
+        <div class="status" id="status">מוכן.</div>
+      </section>
+
+      <section class="card">
+        <h2>תוצאה</h2>
+
+        <!-- משתתפות -->
+        <div id="participantsBox" style="display:none;">
+          <div class="pill">משתתפות בתרגיל</div>
+          <ul id="participantsList"></ul>
         </div>
 
-        <div id="status" class="status"></div>
-      </div>
-
-      <!-- טבלה -->
-      <div class="card">
-        <div class="row" style="justify-content:space-between;">
-          <h2 style="margin:0;">Books</h2>
-          <span class="status" id="count"></span>
-        </div>
-
-        <div style="overflow:auto;">
+        <!-- ספרים -->
+        <div id="booksBox" style="display:none; margin-top: 12px;">
+          <div class="pill">רשימת ספרים (מה-MySQL)</div>
           <table>
             <thead>
               <tr>
@@ -179,122 +204,110 @@
                 <th>price</th>
               </tr>
             </thead>
-            <tbody id="books-body">
-              <tr><td colspan="5" style="color:rgba(255,255,255,.65);">טוען נתונים...</td></tr>
-            </tbody>
+            <tbody id="booksTbody"></tbody>
           </table>
         </div>
-      </div>
+
+      </section>
     </div>
 
-    <div class="footer">© Library Database Project — Shira & Hodaya</div>
+    <footer>Library Database Project — Shira & Hodaya ©</footer>
   </div>
 
   <script>
-    // כתובת ה-API (את כבר רואה שזה עובד בדפדפן)
-    const API_URL = "http://localhost:3000/api/books";
+    // אם השרת רץ על מחשב שלך:
+    const API_BASE = "http://localhost:3000/api";
 
-    let allBooks = [];
+    const statusEl = document.getElementById("status");
 
-    const elBody = document.getElementById("books-body");
-    const elStatus = document.getElementById("status");
-    const elCount = document.getElementById("count");
-    const elSearch = document.getElementById("search");
-    const elSort = document.getElementById("sort");
-    const btnReload = document.getElementById("reload");
-    const btnClear = document.getElementById("clear");
+    const participantsBox = document.getElementById("participantsBox");
+    const participantsList = document.getElementById("participantsList");
 
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, ch => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-      }[ch]));
+    const booksBox = document.getElementById("booksBox");
+    const booksTbody = document.getElementById("booksTbody");
+
+    function setStatus(msg){
+      statusEl.textContent = msg;
     }
 
-    function render(list) {
-      elBody.innerHTML = "";
-      if (!list.length) {
-        elBody.innerHTML = `<tr><td colspan="5" style="color:rgba(255,255,255,.65);">אין נתונים להצגה</td></tr>`;
-        elCount.textContent = "0 ספרים";
+    function clearAll(){
+      participantsBox.style.display = "none";
+      booksBox.style.display = "none";
+      participantsList.innerHTML = "";
+      booksTbody.innerHTML = "";
+      setStatus("נוקה.");
+    }
+
+    async function loadParticipants(){
+      setStatus("טוען משתתפות...");
+      participantsBox.style.display = "none";
+      participantsList.innerHTML = "";
+
+      const res = await fetch(API_BASE + "/participants");
+      if(!res.ok){
+        setStatus("שגיאה בטעינת משתתפות.");
+        return;
+      }
+      const data = await res.json();
+
+      data.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = p.name;
+        participantsList.appendChild(li);
+      });
+
+      participantsBox.style.display = "block";
+      setStatus("משתתפות נטענו בהצלחה.");
+    }
+
+    async function loadBooks(){
+      setStatus("טוען ספרים מה-MySQL...");
+      booksBox.style.display = "none";
+      booksTbody.innerHTML = "";
+
+      const res = await fetch(API_BASE + "/books");
+      const data = await res.json();
+
+      if(!res.ok){
+        setStatus("שגיאה מהשרת: " + (data && data.message ? data.message : "unknown"));
         return;
       }
 
-      for (const b of list) {
+      data.forEach(b => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${escapeHtml(b.product_id)}</td>
-          <td>${escapeHtml(b.title)}</td>
-          <td>${escapeHtml(b.number_of_pages)}</td>
-          <td>${escapeHtml(b.author_id)}</td>
-          <td>${escapeHtml(b.price)}</td>
-        `;
-        elBody.appendChild(tr);
-      }
-      elCount.textContent = `${list.length} ספרים`;
-    }
 
-    function applyFilters() {
-      const q = elSearch.value.trim().toLowerCase();
-      const sort = elSort.value;
+        const tdId = document.createElement("td");
+        tdId.textContent = b.product_id;
 
-      let list = allBooks.slice();
+        const tdTitle = document.createElement("td");
+        tdTitle.textContent = b.title;
 
-      // filter
-      if (q) {
-        list = list.filter(b =>
-          String(b.product_id).includes(q) ||
-          String(b.title).toLowerCase().includes(q)
-        );
-      }
+        const tdPages = document.createElement("td");
+        tdPages.textContent = b.number_of_pages;
 
-      // sort
-      list.sort((a,b) => {
-        const idA = Number(a.product_id), idB = Number(b.product_id);
-        const priceA = Number(a.price), priceB = Number(b.price);
+        const tdAuthor = document.createElement("td");
+        tdAuthor.textContent = b.author_id;
 
-        if (sort === "id_asc") return idA - idB;
-        if (sort === "id_desc") return idB - idA;
+        const tdPrice = document.createElement("td");
+        tdPrice.textContent = b.price;
 
-        if (sort === "title_asc") return String(a.title).localeCompare(String(b.title));
-        if (sort === "title_desc") return String(b.title).localeCompare(String(a.title));
+        tr.appendChild(tdId);
+        tr.appendChild(tdTitle);
+        tr.appendChild(tdPages);
+        tr.appendChild(tdAuthor);
+        tr.appendChild(tdPrice);
 
-        if (sort === "price_asc") return priceA - priceB;
-        if (sort === "price_desc") return priceB - priceA;
-
-        return 0;
+        booksTbody.appendChild(tr);
       });
 
-      render(list);
+      booksBox.style.display = "block";
+      setStatus("נטענו " + data.length + " ספרים.");
     }
 
-    async function loadBooks() {
-      elStatus.textContent = "טוען נתונים מהשרת...";
-      try {
-        const res = await fetch(API_URL, { cache: "no-store" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-
-        allBooks = await res.json();
-        elStatus.textContent = "הנתונים נטענו בהצלחה ✔";
-        applyFilters();
-      } catch (err) {
-        console.error(err);
-        elStatus.textContent = "שגיאה בטעינת נתונים. ודאי שהשרת רץ (node app.js) ושזה הכתובת הנכונה.";
-        elBody.innerHTML = `<tr><td colspan="5" style="color:rgba(255,255,255,.65);">שגיאה בטעינה</td></tr>`;
-        elCount.textContent = "";
-      }
-    }
-
-    // events
-    btnReload.addEventListener("click", loadBooks);
-    btnClear.addEventListener("click", () => {
-      elSearch.value = "";
-      elSort.value = "id_asc";
-      applyFilters();
-    });
-    elSearch.addEventListener("input", applyFilters);
-    elSort.addEventListener("change", applyFilters);
-
-    // init
-    loadBooks();
+    document.getElementById("btnParticipants").addEventListener("click", loadParticipants);
+    document.getElementById("btnBooks").addEventListener("click", loadBooks);
+    document.getElementById("btnClear").addEventListener("click", clearAll);
   </script>
 </body>
 </html>
+
