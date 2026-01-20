@@ -4,8 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>פרויקט מסדי נתונים – ספרייה</title>
-
-  <!-- קישור לעיצוב -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -14,201 +12,194 @@
     <div class="hero__inner">
       <h1>פרויקט מסדי נתונים – ספרייה</h1>
       <p class="subtitle">
-        דף אינטרנט המציג “רשימת ספרים” מתוך קובץ נתונים (books.json) עם אפשרות חיפוש ומיון.
+        דף תצוגה ל־<b>“רשימת ספרים”</b> מתוך <code>books.json</code> (מיוצא מה־SQL).
       </p>
 
-      <div class="chips">
-        <span class="chip">שמות: שירה, הודיה</span>
-        <span class="chip">DB: final_project</span>
+      <div class="meta">
+        <span class="pill">מסד נתונים: <b>final_project</b></span>
+        <span class="pill">משתתפות: <b>שירה</b>, <b>הודיה</b></span>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <section class="panel">
-      <div class="panel__head">
-        <h2>חיפוש ומיון</h2>
-        <p class="muted">הנתונים נטענים מהקובץ <b>books.json</b> שנמצא באותה תיקייה.</p>
-      </div>
+
+    <section class="card">
+      <h2 class="card__title">חיפוש ומיון</h2>
 
       <div class="controls">
         <label class="field">
-          <span class="field__label">חיפוש לפי כותר / מזהה</span>
-          <input id="q" class="input" type="search" placeholder="לדוגמה: 1001 או Databases" />
+          <span>חיפוש לפי כותר / מזהה:</span>
+          <input id="search" type="text" placeholder="לדוגמה: 1001 או Databases" />
         </label>
 
         <label class="field">
-          <span class="field__label">מיון</span>
-          <select id="sort" class="select">
-            <option value="id_asc">מזהה עולה</option>
-            <option value="id_desc">מזהה יורד</option>
-            <option value="title_asc">כותר עולה</option>
-            <option value="title_desc">כותר יורד</option>
-            <option value="pages_desc">עמודים – יורד</option>
-            <option value="price_desc">מחיר – יורד</option>
+          <span>מיון:</span>
+          <select id="sort">
+            <option value="id_asc">מזהה ↑</option>
+            <option value="id_desc">מזהה ↓</option>
+            <option value="title_asc">כותר ↑</option>
+            <option value="title_desc">כותר ↓</option>
+            <option value="price_asc">מחיר ↑</option>
+            <option value="price_desc">מחיר ↓</option>
+            <option value="pages_asc">עמודים ↑</option>
+            <option value="pages_desc">עמודים ↓</option>
           </select>
         </label>
 
-        <div class="buttons">
-          <button id="reload" class="btn btn--primary" type="button">רענון</button>
-          <button id="clear" class="btn" type="button">ניקוי</button>
+        <div class="actions">
+          <button id="load" class="btn btn--primary">טעינת ספרים</button>
+          <button id="clear" class="btn">ניקוי</button>
         </div>
       </div>
 
-      <div class="status">
-        <span id="statusText" class="muted">טוען נתונים…</span>
-      </div>
+      <p class="hint">
+        כדי “לסנכרן” עם ה־SQL: מריצים שאילתת SELECT ב-MySQL, מייצאים לתוצאה, ומדביקים/שומרים אותה ב־<code>books.json</code>.
+      </p>
     </section>
 
-    <section class="panel">
-      <div class="panel__head">
-        <h2>רשימת ספרים</h2>
-        <p class="muted">מוצגים: <b id="count">0</b> ספרים</p>
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title">רשימת ספרים</h2>
+        <div class="counter" id="counter">מוצגים: 0</div>
       </div>
 
       <div class="tableWrap">
-        <table class="table" aria-label="Books">
+        <table class="table">
           <thead>
             <tr>
-              <th>product_id</th>
-              <th>title</th>
-              <th>pages</th>
-              <th>author_id</th>
-              <th>price</th>
+              <th>מזהה</th>
+              <th>כותר</th>
+              <th>עמודים</th>
+              <th>מזהה סופר</th>
+              <th>מחיר</th>
             </tr>
           </thead>
-          <tbody id="tbody">
-            <tr><td colspan="5" class="muted center">טוען…</td></tr>
+          <tbody id="rows">
+            <tr>
+              <td colspan="5" class="empty">לחצי על “טעינת ספרים”.</td>
+            </tr>
           </tbody>
         </table>
       </div>
+
+      <div id="status" class="status"></div>
     </section>
+
   </main>
 
   <footer class="footer">
     © Library Database Project — Shira & Hodaya
   </footer>
 
-  <script>
-    const els = {
-      q: document.getElementById("q"),
-      sort: document.getElementById("sort"),
-      reload: document.getElementById("reload"),
-      clear: document.getElementById("clear"),
-      status: document.getElementById("statusText"),
-      tbody: document.getElementById("tbody"),
-      count: document.getElementById("count"),
+<script>
+  const loadBtn = document.getElementById("load");
+  const clearBtn = document.getElementById("clear");
+  const searchEl = document.getElementById("search");
+  const sortEl = document.getElementById("sort");
+  const rowsEl = document.getElementById("rows");
+  const statusEl = document.getElementById("status");
+  const counterEl = document.getElementById("counter");
+
+  let books = [];
+
+  function normBook(x) {
+    // תומך בכמה שמות שדות אפשריים כדי שלא תתקעי
+    return {
+      product_id: Number(x.product_id ?? x.book_id ?? x.id ?? x.productId),
+      title: String(x.title ?? x.book_title ?? x.name ?? ""),
+      pages: Number(x.pages ?? x.number_of_pages ?? x.num_pages ?? 0),
+      author_id: Number(x.author_id ?? x.authorId ?? x.author ?? 0),
+      price: Number(x.price ?? x.book_price ?? 0)
     };
+  }
 
-    let allBooks = [];
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[m]));
+  }
 
-    function normalizeBooks(data) {
-      // תומך גם במערך [ ... ] וגם באובייקט { books: [ ... ] }
-      const arr = Array.isArray(data) ? data : (data && Array.isArray(data.books) ? data.books : []);
-      return arr.map(b => ({
-        product_id: b.product_id ?? b.id ?? null,
-        title: b.title ?? b.name ?? "",
-        pages: b.pages ?? b.number_of_pages ?? b.numberOfPages ?? null,
-        author_id: b.author_id ?? b.authorId ?? "",
-        price: b.price ?? null
-      })).filter(b => b.product_id !== null);
+  function render(list) {
+    counterEl.textContent = `מוצגים: ${list.length}`;
+
+    if (!list.length) {
+      rowsEl.innerHTML = `<tr><td colspan="5" class="empty">אין נתונים להצגה.</td></tr>`;
+      return;
     }
 
-    function setStatus(msg) {
-      els.status.textContent = msg;
+    rowsEl.innerHTML = list.map(b => `
+      <tr>
+        <td>${Number.isFinite(b.product_id) ? b.product_id : ""}</td>
+        <td>${escapeHtml(b.title)}</td>
+        <td>${Number.isFinite(b.pages) ? b.pages : ""}</td>
+        <td>${Number.isFinite(b.author_id) ? b.author_id : ""}</td>
+        <td>${Number.isFinite(b.price) ? b.price : ""}</td>
+      </tr>
+    `).join("");
+  }
+
+  function applyFilters() {
+    const q = searchEl.value.trim().toLowerCase();
+    let filtered = [...books];
+
+    if (q) {
+      filtered = filtered.filter(b =>
+        String(b.product_id).includes(q) ||
+        b.title.toLowerCase().includes(q)
+      );
     }
 
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, c => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[c]));
+    const sort = sortEl.value;
+    const cmpNum = (a, b, key, dir) => (a[key] - b[key]) * dir;
+    const cmpStr = (a, b, key, dir) => a[key].localeCompare(b[key], "he") * dir;
+
+    switch (sort) {
+      case "id_asc":    filtered.sort((a,b)=>cmpNum(a,b,"product_id", 1)); break;
+      case "id_desc":   filtered.sort((a,b)=>cmpNum(a,b,"product_id",-1)); break;
+      case "title_asc": filtered.sort((a,b)=>cmpStr(a,b,"title", 1)); break;
+      case "title_desc":filtered.sort((a,b)=>cmpStr(a,b,"title",-1)); break;
+      case "price_asc": filtered.sort((a,b)=>cmpNum(a,b,"price", 1)); break;
+      case "price_desc":filtered.sort((a,b)=>cmpNum(a,b,"price",-1)); break;
+      case "pages_asc": filtered.sort((a,b)=>cmpNum(a,b,"pages", 1)); break;
+      case "pages_desc":filtered.sort((a,b)=>cmpNum(a,b,"pages",-1)); break;
     }
 
-    function compare(a, b, mode) {
-      if (mode === "id_asc") return (a.product_id - b.product_id);
-      if (mode === "id_desc") return (b.product_id - a.product_id);
+    render(filtered);
+  }
 
-      if (mode === "title_asc") return (a.title || "").localeCompare(b.title || "", "he");
-      if (mode === "title_desc") return (b.title || "").localeCompare(a.title || "", "he");
+  loadBtn.addEventListener("click", async () => {
+    statusEl.textContent = "טוען books.json...";
+    try {
+      // חשוב: אותו תיקייה כמו index.html
+      const res = await fetch("./books.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("לא הצלחתי להוריד את books.json (בדקי שם/מיקום).");
+      const data = await res.json();
 
-      if (mode === "pages_desc") return ((b.pages ?? -1) - (a.pages ?? -1));
-      if (mode === "price_desc") return ((b.price ?? -1) - (a.price ?? -1));
+      // תומך גם אם זה מערך וגם אם זה {books:[...]}
+      const arr = Array.isArray(data) ? data : (data.books ?? []);
+      books = arr.map(normBook).filter(b => b.title || Number.isFinite(b.product_id));
 
-      return 0;
-    }
-
-    function render(list) {
-      els.count.textContent = String(list.length);
-
-      if (!list.length) {
-        els.tbody.innerHTML = `<tr><td colspan="5" class="muted center">אין נתונים להצגה.</td></tr>`;
-        return;
-      }
-
-      els.tbody.innerHTML = list.map(b => `
-        <tr>
-          <td>${escapeHtml(b.product_id)}</td>
-          <td>${escapeHtml(b.title)}</td>
-          <td>${escapeHtml(b.pages ?? "")}</td>
-          <td>${escapeHtml(b.author_id)}</td>
-          <td>${escapeHtml(b.price ?? "")}</td>
-        </tr>
-      `).join("");
-    }
-
-    function applyFilters() {
-      const q = (els.q.value || "").trim().toLowerCase();
-      const sort = els.sort.value;
-
-      let list = [...allBooks];
-
-      if (q) {
-        list = list.filter(b =>
-          String(b.product_id).includes(q) ||
-          (b.title || "").toLowerCase().includes(q) ||
-          (b.author_id || "").toLowerCase().includes(q)
-        );
-      }
-
-      list.sort((a, b) => compare(a, b, sort));
-      render(list);
-    }
-
-    async function loadBooks() {
-      try {
-        setStatus("טוען נתונים מ־books.json…");
-        const res = await fetch("books.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-
-        const data = await res.json();
-        allBooks = normalizeBooks(data);
-
-        if (!allBooks.length) {
-          setStatus("הקובץ נטען, אבל לא נמצאו רשומות בפורמט מתאים. בדקי את מבנה books.json.");
-        } else {
-          setStatus("נטען בהצלחה ✅");
-        }
-
-        applyFilters();
-      } catch (e) {
-        setStatus("שגיאה בטעינת books.json. ודאי שהוא באותה תיקייה ושפורמט ה־JSON תקין.");
-        els.tbody.innerHTML = `<tr><td colspan="5" class="muted center">שגיאה בטעינת נתונים.</td></tr>`;
-        els.count.textContent = "0";
-      }
-    }
-
-    els.reload.addEventListener("click", loadBooks);
-    els.clear.addEventListener("click", () => {
-      els.q.value = "";
-      els.sort.value = "id_asc";
+      statusEl.textContent = `נטענו ${books.length} ספרים.`;
       applyFilters();
-      setStatus("נוקה. אפשר לחפש מחדש.");
-    });
-    els.q.addEventListener("input", applyFilters);
-    els.sort.addEventListener("change", applyFilters);
+    } catch (e) {
+      books = [];
+      render([]);
+      statusEl.textContent = "שגיאה: " + e.message;
+    }
+  });
 
-    // טוען אוטומטית כשנכנסים לדף
-    loadBooks();
-  </script>
+  clearBtn.addEventListener("click", () => {
+    books = [];
+    searchEl.value = "";
+    sortEl.value = "id_asc";
+    statusEl.textContent = "";
+    counterEl.textContent = "מוצגים: 0";
+    rowsEl.innerHTML = `<tr><td colspan="5" class="empty">לחצי על “טעינת ספרים”.</td></tr>`;
+  });
+
+  searchEl.addEventListener("input", applyFilters);
+  sortEl.addEventListener("change", applyFilters);
+</script>
 </body>
 </html>
