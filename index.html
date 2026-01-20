@@ -24,10 +24,9 @@
       inset:0;
       background:
         linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.55)),
-        url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=2000&q=60");
+        url("bg-book.jpg");
       background-size:cover;
       background-position:center;
-      filter:saturate(1.1);
       z-index:-1;
     }
     .container{ width:min(1100px, 100%); }
@@ -44,8 +43,11 @@
       display:grid;
       grid-template-columns: 2fr 1fr;
       gap:18px;
+      align-items:start;
     }
-    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns:1fr; }
+    }
 
     .card{
       background:rgba(15, 25, 45, .55);
@@ -137,7 +139,9 @@
 
         <div class="actions">
           <button id="btnLoadBooks">רשימת ספרים</button>
+
           <input id="searchInput" type="text" placeholder="חיפוש לפי שם ספר / מזהה..." disabled />
+
           <select id="sortSelect" disabled>
             <option value="product_id_asc">מיון: מזהה עולה</option>
             <option value="product_id_desc">מיון: מזהה יורד</option>
@@ -151,7 +155,7 @@
         </div>
 
         <div id="booksStatus" class="status hint">
-          לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים מה־DB.
+          לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים מהשרת.
         </div>
 
         <div id="booksTableWrap"></div>
@@ -162,11 +166,11 @@
         <h2>משתתפות</h2>
 
         <div class="actions">
-          <button id="btnLoadParticipants">הצג משתתפים</button>
+          <button id="btnLoadParticipants">הצג משתתפות</button>
         </div>
 
         <div id="participantsStatus" class="status hint">
-          לחצי על <b>הצג משתתפים</b> כדי להציג את הרשימה.
+          לחצי על <b>הצג משתתפות</b> כדי להציג את הרשימה.
         </div>
 
         <ul id="participantsList" class="list" style="display:none;"></ul>
@@ -178,16 +182,19 @@
   </div>
 
   <script>
-    // עובד אוטומטית:
-    // - בלוקאלי: http://localhost:3000
-    // - ב-GitHub Pages: הולך ל-Render (שני את ה-URL אם השירות שלך שונה)
+    // =============================
+    // API BASE (Local / GitHub Pages)
+    // =============================
+    // אם זה GitHub Pages -> נלך ל-Render
+    // אם זה Local (קובץ/localhost) -> נלך ל-localhost:3000
+    const RENDER_API = "https://final-project-lqft.onrender.com"; // אם זה שונה אצלך - תשני רק פה
     const API_BASE =
-      location.hostname.includes("github.io")
-        ? "https://final-project-lqft.onrender.com"
+      (location.hostname.includes("github.io"))
+        ? RENDER_API
         : "http://localhost:3000";
 
     async function fetchJson(path) {
-      const res = await fetch(API_BASE + path);
+      const res = await fetch(API_BASE + path, { cache: "no-store" });
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || ("HTTP " + res.status));
@@ -196,7 +203,7 @@
     }
 
     function escapeHtml(str) {
-      return String(str)
+      return String(str ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -204,7 +211,9 @@
         .replaceAll("'", "&#039;");
     }
 
-    // ---------- BOOKS ----------
+    // =============================
+    // BOOKS
+    // =============================
     const btnLoadBooks = document.getElementById("btnLoadBooks");
     const booksStatus = document.getElementById("booksStatus");
     const booksTableWrap = document.getElementById("booksTableWrap");
@@ -224,21 +233,21 @@
         <table>
           <thead>
             <tr>
-              <th>product_id</th>
-              <th>title</th>
-              <th>number_of_pages</th>
-              <th>author_id</th>
               <th>price</th>
+              <th>author_id</th>
+              <th>number_of_pages</th>
+              <th>title</th>
+              <th>product_id</th>
             </tr>
           </thead>
           <tbody>
             ${rows.map(r => `
               <tr>
-                <td>${escapeHtml(r.product_id)}</td>
-                <td>${escapeHtml(r.title)}</td>
-                <td>${escapeHtml(r.number_of_pages)}</td>
-                <td>${escapeHtml(r.author_id)}</td>
                 <td>${escapeHtml(r.price)}</td>
+                <td>${escapeHtml(r.author_id)}</td>
+                <td>${escapeHtml(r.number_of_pages)}</td>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(r.product_id)}</td>
               </tr>
             `).join("")}
           </tbody>
@@ -280,7 +289,7 @@
     }
 
     btnLoadBooks.addEventListener("click", async () => {
-      booksStatus.textContent = "טוען ספרים מה־DB...";
+      booksStatus.textContent = "טוען ספרים מהשרת...";
       booksTableWrap.innerHTML = "";
 
       try {
@@ -298,7 +307,9 @@
     searchInput.addEventListener("input", applySearchAndSort);
     sortSelect.addEventListener("change", applySearchAndSort);
 
-    // ---------- PARTICIPANTS ----------
+    // =============================
+    // PARTICIPANTS
+    // =============================
     const btnLoadParticipants = document.getElementById("btnLoadParticipants");
     const participantsStatus = document.getElementById("participantsStatus");
     const participantsList = document.getElementById("participantsList");
@@ -311,12 +322,10 @@
       try {
         const parts = await fetchJson("/api/participants");
 
-        const names = (parts || []).map(p => {
-          if (typeof p === "string") return p;
-          return (p.full_name ?? p.name ?? "");
-        }).filter(Boolean);
-
-        participantsList.innerHTML = names.map(n => `<li>${escapeHtml(n)}</li>`).join("");
+        participantsList.innerHTML = (parts || []).map(p => {
+          const name = (typeof p === "string") ? p : (p.full_name ?? p.name ?? "");
+          return `<li>${escapeHtml(name)}</li>`;
+        }).join("");
 
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
