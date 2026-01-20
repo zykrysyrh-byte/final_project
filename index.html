@@ -1,150 +1,391 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8" />
-    <title>פרויקט מסדי נתונים – ספרייה</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>פרויקט מסדי נתונים – ספרייה</title>
 
-    <!-- חיבור לקובץ העיצוב -->
-    <link rel="stylesheet" href="style.css">
+  <!-- אם יש לך style.css, תשאירי את זה. אם לא - זה עדיין יעבוד כי יש עיצוב גם כאן -->
+  <link rel="stylesheet" href="style.css" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root{
+      --glass: rgba(14, 18, 28, .62);
+      --glass2: rgba(14, 18, 28, .48);
+      --border: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --shadow: 0 24px 70px rgba(0,0,0,.55);
+      --radius: 18px;
+    }
+
+    *{ box-sizing: border-box; }
+    html, body{ height: 100%; }
+    body{
+      margin:0;
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Arial;
+      background:
+        linear-gradient(rgba(8,10,18,.72), rgba(8,10,18,.86)),
+        url("bg-book.jpg");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 16px 50px;
+    }
+
+    header{
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      text-align:center;
+      margin ✓
+      margin-top: 10px;
+    }
+
+    .title{
+      font-size: clamp(28px, 3.2vw, 44px);
+      font-weight: 800;
+      letter-spacing: .5px;
+      margin: 0;
+      text-shadow: 0 10px 30px rgba(0,0,0,.55);
+    }
+
+    .pill-row{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 6px;
+    }
+
+    .pill{
+      display:inline-flex;
+      gap: 8px;
+      align-items:center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .grid{
+      margin-top: 22px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 900px){
+      .grid{ grid-template-columns: 1.2fr .8fr; }
+    }
+
+    .card{
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      padding: 18px;
+    }
+
+    .card h2{
+      margin:0 0 10px;
+      font-size: 18px;
+      letter-spacing: .2px;
+    }
+
+    .muted{ color: var(--muted); }
+
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    button{
+      cursor:pointer;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 700;
+      transition: transform .12s ease, background .12s ease;
+    }
+    button:hover{ transform: translateY(-1px); background: rgba(255,255,255,.14); }
+    button:active{ transform: translateY(0px); }
+
+    .btn-primary{
+      background: rgba(78, 161, 255, .18);
+      border-color: rgba(78, 161, 255, .28);
+    }
+
+    .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    input, select{
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      padding: 10px 12px;
+      outline:none;
+      min-width: 220px;
+    }
+    select{ min-width: 180px; }
+
+    .status{
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+    }
+    th, td{
+      padding: 10px 10px;
+      text-align: right;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 14px;
+    }
+    th{ color: rgba(255,255,255,.85); font-weight: 800; }
+    tr:hover td{ background: rgba(255,255,255,.04); }
+
+    footer{
+      text-align:center;
+      margin-top: 18px;
+      color: rgba(255,255,255,.65);
+      font-size: 13px;
+    }
+
+    .small-note{
+      margin-top: 6px;
+      font-size: 13px;
+      color: rgba(255,255,255,.68);
+      line-height: 1.45;
+    }
+
+    .kbd{
+      display:inline-block;
+      padding: 2px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      font-size: 12px;
+      color: rgba(255,255,255,.78);
+    }
+  </style>
 </head>
 
 <body>
+  <div class="wrap">
+    <header>
+      <h1 class="title">פרויקט מסדי נתונים – ספרייה</h1>
 
-<header class="hero">
-    <h1>פרויקט מסדי נתונים – ספרייה 📚</h1>
-    <p class="subtitle">
-        מערכת לניהול ספרים, כרכים ורכישות<br>
-        קורס מסדי נתונים
-    </p>
-</header>
+      <div class="pill-row">
+        <span class="pill">מסד נתונים: <strong style="color:var(--text)">final_project</strong></span>
+        <span class="pill">משתתפות: <strong style="color:var(--text)">שירה, הודיה</strong></span>
+      </div>
+    </header>
 
-<section class="card">
-    <h2>🎯 מטרת הפרויקט</h2>
-    <p>
-        פרויקט זה מדגים בניית מסד נתונים עבור ספרייה, כולל:
-        ספרים עם מספר כרכים, לקוחות, רכישות ושאילתות SQL מתקדמות.
-    </p>
-    <p>
-        הקישור נועד להמחיש אינטראקציה עם נתוני הספרים,
-        בדומה לדרישות <strong>שאלה 7</strong>.
-    </p>
-</section>
+    <div class="grid">
+      <!-- כרטיס הסבר על השאלה -->
+      <section class="card">
+        <h2>המטרה (שאלה 7)</h2>
+        <div class="small-note">
+          ליצור קישור/דף אינטרנט שמציג את שם מסד הנתונים ואת שמות המשתתפות.
+          בנוסף, יש כפתור <strong>“רשימת ספרים”</strong> שמציג רשימה של ספרים
+          עם הפרטים הידועים עליהם. שינוי במסד הנתונים יגרור שינוי ברשימה המוצגת
+          (אצלנו זה מדומה ע״י קובץ <span class="kbd">books.json</span> שמכיל את נתוני הספרים).
+        </div>
 
-<section class="card">
-    <h2>👩‍💻 משתתפות</h2>
-    <ul>
-        <li>שירה</li>
-        <li>הודיה</li>
-    </ul>
-</section>
+        <div class="actions">
+          <button id="loadBtn" class="btn-primary">רשימת ספרים</button>
+          <button id="clearBtn">ניקוי</button>
+        </div>
 
-<section class="card">
-    <h2>📖 רשימת ספרים</h2>
+        <div class="status" id="statusEl">לחצי “רשימת ספרים” כדי לטעון נתונים.</div>
+      </section>
 
-    <div class="controls">
-        <input
-            type="text"
-            id="search"
-            placeholder="חיפוש לפי שם ספר..."
-        >
+      <!-- כרטיס מסוננים -->
+      <aside class="card">
+        <h2>חיפוש ומיון</h2>
 
-        <select id="sort">
-            <option value="id_asc">מיון לפי מזהה ↑</option>
-            <option value="id_desc">מיון לפי מזהה ↓</option>
-            <option value="title_asc">מיון לפי שם א-ת</option>
-            <option value="title_desc">מיון לפי שם ת-א</option>
-        </select>
+        <div class="row">
+          <input id="searchEl" type="text" placeholder="חיפוש לפי שם ספר / מזהה..." />
+          <select id="sortEl">
+            <option value="id_asc">מיון: מזהה עולה</option>
+            <option value="id_desc">מיון: מזהה יורד</option>
+            <option value="title_asc">מיון: שם A→Z</option>
+            <option value="title_desc">מיון: שם Z→A</option>
+            <option value="pages_desc">מיון: עמודים ↓</option>
+            <option value="price_desc">מיון: מחיר ↓</option>
+          </select>
+        </div>
 
-        <button id="load">טען ספרים</button>
-        <button id="clear">נקה</button>
+        <div class="small-note">
+          כדי שזה יהיה “מסונכרן עם ה־SQL”: פשוט תוודאי שב־<span class="kbd">books.json</span>
+          שמורים אותם שדות כמו בטבלת <span class="kbd">Book</span> + מחיר מטבלת <span class="kbd">Product</span>.
+        </div>
+      </aside>
     </div>
 
-    <p id="status" class="status"></p>
+    <!-- טבלה -->
+    <section class="card" style="margin-top:14px">
+      <h2>Books</h2>
+      <div class="small-note muted">טוען נתונים מ־<span class="kbd">books.json</span> שנמצא באותו ריפו.</div>
 
-    <div id="grid" class="grid"></div>
-</section>
+      <div style="margin-top:12px; overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:110px">product_id</th>
+              <th>title</th>
+              <th style="width:140px">pages</th>
+              <th style="width:140px">author_id</th>
+              <th style="width:120px">price</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyEl">
+            <tr>
+              <td colspan="5" class="muted">אין נתונים עדיין.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-<footer>
-    Library Database Project — Shira & Hodaya ©
-</footer>
+    <footer>
+      Library Database Project — Shira & Hodaya ©
+    </footer>
+  </div>
 
-<script>
+  <script>
+    // מצפים לקובץ books.json עם רשומה בסגנון:
+    // [
+    //   {"product_id":1001,"title":"Introduction to Databases","number_of_pages":120,"author_id":"210000026","price":19.90},
+    //   ...
+    // ]
+
+    const loadBtn  = document.getElementById("loadBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const statusEl = document.getElementById("statusEl");
+    const tbodyEl  = document.getElementById("tbodyEl");
+    const searchEl = document.getElementById("searchEl");
+    const sortEl   = document.getElementById("sortEl");
+
     let books = [];
 
-    const loadBtn = document.getElementById("load");
-    const clearBtn = document.getElementById("clear");
-    const grid = document.getElementById("grid");
-    const statusEl = document.getElementById("status");
-    const searchEl = document.getElementById("search");
-    const sortEl = document.getElementById("sort");
-
-    function render(list) {
-        grid.innerHTML = "";
-
-        if (list.length === 0) {
-            grid.innerHTML = "<p>לא נמצאו ספרים</p>";
-            return;
-        }
-
-        list.forEach(b => {
-            const div = document.createElement("div");
-            div.className = "book-card";
-            div.innerHTML = `
-                <h3>${b.title}</h3>
-                <p><strong>מזהה:</strong> ${b.product_id}</p>
-                <p><strong>מחיר:</strong> ${b.price} ₪</p>
-                <p><strong>מספר כרכים:</strong> ${b.volumes}</p>
-            `;
-            grid.appendChild(div);
-        });
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+      }[m]));
     }
 
-    function applyFilters() {
-        let list = [...books];
+    function toNumber(x){
+      const n = Number(x);
+      return Number.isFinite(n) ? n : 0;
+    }
 
-        const q = searchEl.value.trim().toLowerCase();
-        if (q) {
-            list = list.filter(b =>
-                b.title.toLowerCase().includes(q)
-            );
-        }
+    function render(list){
+      if(!list.length){
+        tbodyEl.innerHTML = '<tr><td colspan="5" class="muted">אין תוצאות.</td></tr>';
+        return;
+      }
 
-        const sort = sortEl.value;
-        list.sort((a, b) => {
-            if (sort === "id_asc") return a.product_id - b.product_id;
-            if (sort === "id_desc") return b.product_id - a.product_id;
-            if (sort === "title_asc") return a.title.localeCompare(b.title);
-            if (sort === "title_desc") return b.title.localeCompare(a.title);
-            return 0;
-        });
+      tbodyEl.innerHTML = list.map(b => `
+        <tr>
+          <td>${escapeHtml(b.product_id)}</td>
+          <td>${escapeHtml(b.title ?? "")}</td>
+          <td>${escapeHtml(b.number_of_pages ?? "")}</td>
+          <td>${escapeHtml(b.author_id ?? "")}</td>
+          <td>${escapeHtml((b.price ?? "").toString())}</td>
+        </tr>
+      `).join("");
+    }
 
-        render(list);
+    function applyFilters(){
+      const q = searchEl.value.trim().toLowerCase();
+      let list = [...books];
+
+      if(q){
+        list = list.filter(b =>
+          String(b.product_id).toLowerCase().includes(q) ||
+          String(b.title ?? "").toLowerCase().includes(q)
+        );
+      }
+
+      const s = sortEl.value;
+      list.sort((a,b)=>{
+        if(s==="id_asc")   return toNumber(a.product_id) - toNumber(b.product_id);
+        if(s==="id_desc")  return toNumber(b.product_id) - toNumber(a.product_id);
+        if(s==="title_asc")  return String(a.title??"").localeCompare(String(b.title??""));
+        if(s==="title_desc") return String(b.title??"").localeCompare(String(a.title??""));
+        if(s==="pages_desc") return toNumber(b.number_of_pages) - toNumber(a.number_of_pages);
+        if(s==="price_desc") return toNumber(b.price) - toNumber(a.price);
+        return 0;
+      });
+
+      render(list);
+      statusEl.textContent = `נטענו ${books.length} ספרים. מוצגים כעת: ${list.length}.`;
     }
 
     loadBtn.addEventListener("click", async () => {
-        statusEl.textContent = "טוען נתונים...";
-        try {
-            const res = await fetch("books.json", { cache: "no-store" });
-            books = await res.json();
-            statusEl.textContent = "הנתונים נטענו בהצלחה ✔";
-            applyFilters();
-        } catch (e) {
-            statusEl.textContent = "שגיאה בטעינת books.json";
-        }
+      statusEl.textContent = "טוען books.json...";
+      try{
+        const res = await fetch("books.json", { cache: "no-store" });
+        if(!res.ok) throw new Error("HTTP " + res.status);
+        books = await res.json();
+
+        // אם במקרה השדות אצלך שונים, ננסה לתקן בעדינות:
+        books = books.map(b => ({
+          product_id: b.product_id ?? b.id ?? b.book_id,
+          title: b.title ?? b.name,
+          number_of_pages: b.number_of_pages ?? b.pages,
+          author_id: b.author_id ?? b.author,
+          price: b.price ?? b.book_price
+        }));
+
+        applyFilters();
+      }catch(e){
+        console.error(e);
+        books = [];
+        render([]);
+        statusEl.textContent = "שגיאה: לא הצלחנו לקרוא את books.json. בדקי שהוא נמצא באותה תיקייה ושמו נכון.";
+      }
     });
 
     clearBtn.addEventListener("click", () => {
-        books = [];
-        grid.innerHTML = "";
-        searchEl.value = "";
-        statusEl.textContent = "המסך נוקה";
+      books = [];
+      searchEl.value = "";
+      tbodyEl.innerHTML = '<tr><td colspan="5" class="muted">אין נתונים עדיין.</td></tr>';
+      statusEl.textContent = "נוקה. לחצי “רשימת ספרים” כדי לטעון נתונים.";
     });
 
-    searchEl.addEventListener("input", applyFilters);
-    sortEl.addEventListener("change", applyFilters);
-</script>
-
+    searchEl.addEventListener("input", () => applyFilters());
+    sortEl.addEventListener("change", () => applyFilters());
+  </script>
 </body>
 </html>
