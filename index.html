@@ -32,33 +32,18 @@
       filter:saturate(1.1);
       z-index:-1;
     }
-    .container{
-      width:min(1100px, 100%);
-    }
-    header{
-      text-align:center;
-      margin-bottom:22px;
-    }
+    .container{ width:min(1100px, 100%); }
+    header{ text-align:center; margin-bottom:22px; }
     header h1{
       margin:0 0 8px 0;
       font-size:44px;
       letter-spacing:.5px;
       text-shadow:0 6px 18px rgba(0,0,0,.35);
     }
-    header p{
-      margin:0;
-      opacity:.9;
-      text-shadow:0 6px 18px rgba(0,0,0,.35);
-    }
+    header p{ margin:0; opacity:.9; text-shadow:0 6px 18px rgba(0,0,0,.35); }
 
-    .grid{
-      display:grid;
-      grid-template-columns: 2fr 1fr;
-      gap:18px;
-    }
-    @media (max-width: 900px){
-      .grid{ grid-template-columns:1fr; }
-    }
+    .grid{ display:grid; grid-template-columns: 2fr 1fr; gap:18px; }
+    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
 
     .card{
       background:rgba(15, 25, 45, .55);
@@ -68,10 +53,7 @@
       box-shadow:0 12px 30px rgba(0,0,0,.25);
       padding:16px;
     }
-    .card h2{
-      margin:0 0 10px 0;
-      font-size:20px;
-    }
+    .card h2{ margin:0 0 10px 0; font-size:20px; }
 
     .actions{
       display:flex;
@@ -102,16 +84,8 @@
     }
     input::placeholder{ color:rgba(255,255,255,.65); }
 
-    .hint{
-      opacity:.9;
-      font-size:13px;
-      margin-top:8px;
-    }
-    .status{
-      margin-top:10px;
-      font-size:13px;
-      opacity:.95;
-    }
+    .hint{ opacity:.9; font-size:13px; margin-top:8px; }
+    .status{ margin-top:10px; font-size:13px; opacity:.95; }
 
     table{
       width:100%;
@@ -127,35 +101,15 @@
       font-size:14px;
       white-space:nowrap;
     }
-    th{
-      background:rgba(255,255,255,.10);
-      font-weight:800;
-    }
-    tbody tr:hover{
-      background:rgba(255,255,255,.06);
-    }
+    th{ background:rgba(255,255,255,.10); font-weight:800; }
+    tbody tr:hover{ background:rgba(255,255,255,.06); }
 
-    .list{
-      margin:10px 0 0 0;
-      padding:0 18px 0 0;
-    }
-    .list li{
-      margin:8px 0;
-    }
-    .footer{
-      margin-top:16px;
-      text-align:center;
-      opacity:.85;
-      font-size:12px;
-    }
-    .error{
-      color:#ffd2d2;
-      font-weight:700;
-    }
-    .ok{
-      color:#d8ffd8;
-      font-weight:700;
-    }
+    .list{ margin:10px 0 0 0; padding:0 18px 0 0; }
+    .list li{ margin:8px 0; }
+
+    .footer{ margin-top:16px; text-align:center; opacity:.85; font-size:12px; }
+    .error{ color:#ffd2d2; font-weight:700; }
+    .ok{ color:#d8ffd8; font-weight:700; }
   </style>
 </head>
 
@@ -211,11 +165,6 @@
         </div>
 
         <ul id="participantsList" class="list" style="display:none;"></ul>
-
-        <div class="hint" style="margin-top:12px;">
-          קישורים לבדיקה:<br/>
-          <span dir="ltr">/api/health</span> , <span dir="ltr">/api/books</span> , <span dir="ltr">/api/participants</span>
-        </div>
       </aside>
 
     </div>
@@ -224,18 +173,16 @@
   </div>
 
   <script>
-    // אם את מריצה מקומית: localhost
-    // אם בעתיד תעלי ל-Render: תשני לכאן את הכתובת של השרת (לדוגמה https://your-server.onrender.com)
+    // IMPORTANT:
+    // מקומי: localhost
+    // אם העלית Backend ל-Render/שרת אחר -> תשני כאן לכתובת של השרת (ללא / בסוף)
     const API_BASE = "http://localhost:3000";
 
-    // ---------- Helpers ----------
     async function fetchJson(path) {
       const res = await fetch(API_BASE + path);
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || ("HTTP " + res.status));
-      }
-      return await res.json();
+      const dataText = await res.text();
+      if (!res.ok) throw new Error(dataText || ("HTTP " + res.status));
+      return dataText ? JSON.parse(dataText) : null;
     }
 
     function escapeHtml(str) {
@@ -352,15 +299,21 @@
       participantsList.innerHTML = "";
 
       try {
-        // מצופה מהשרת להחזיר מערך כמו:
-        // [ { name: "שירה זכרי" }, { name: "הודיה אסתר זכרי" } ]
+        // השרת מחזיר אצלך:
+        // [{ id: 1, full_name: "שירה זכרי" }, { id: 2, full_name: "הודיה אסתר זכרי" }]
         const parts = await fetchJson("/api/participants");
 
-        participantsList.innerHTML = (parts || []).map(p => {
-          const name = (typeof p === "string") ? p : (p.name ?? "");
-          return `<li>${escapeHtml(name)}</li>`;
-        }).join("");
+        const names = (parts || []).map(p => {
+          if (typeof p === "string") return p;
+          return (p.full_name ?? p.name ?? p.fullName ?? "");
+        }).filter(Boolean);
 
+        if (names.length === 0) {
+          participantsStatus.innerHTML = `<span class="error">לא חזרו משתתפות מהשרת.</span>`;
+          return;
+        }
+
+        participantsList.innerHTML = names.map(n => `<li>${escapeHtml(n)}</li>`).join("");
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
       } catch (e) {
