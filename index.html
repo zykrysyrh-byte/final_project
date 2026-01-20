@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>פרויקט מסדי נתונים - ספרייה</title>
 
-  <!-- אם יש לך style.css בפרויקט - תשאירי את זה -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- גיבוי CSS קטן כדי שלא "ייהרס" גם אם style.css לא נטען -->
   <style>
     body{
       margin:0;
@@ -29,7 +27,6 @@
         url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=2000&q=60");
       background-size:cover;
       background-position:center;
-      filter:saturate(1.1);
       z-index:-1;
     }
     .container{ width:min(1100px, 100%); }
@@ -42,7 +39,11 @@
     }
     header p{ margin:0; opacity:.9; text-shadow:0 6px 18px rgba(0,0,0,.35); }
 
-    .grid{ display:grid; grid-template-columns: 2fr 1fr; gap:18px; }
+    .grid{
+      display:grid;
+      grid-template-columns: 2fr 1fr;
+      gap:18px;
+    }
     @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
 
     .card{
@@ -107,7 +108,12 @@
     .list{ margin:10px 0 0 0; padding:0 18px 0 0; }
     .list li{ margin:8px 0; }
 
-    .footer{ margin-top:16px; text-align:center; opacity:.85; font-size:12px; }
+    .footer{
+      margin-top:16px;
+      text-align:center;
+      opacity:.85;
+      font-size:12px;
+    }
     .error{ color:#ffd2d2; font-weight:700; }
     .ok{ color:#d8ffd8; font-weight:700; }
   </style>
@@ -173,16 +179,21 @@
   </div>
 
   <script>
-    // IMPORTANT:
-    // מקומי: localhost
-    // אם העלית Backend ל-Render/שרת אחר -> תשני כאן לכתובת של השרת (ללא / בסוף)
-    const API_BASE = "http://localhost:3000";
+    // אם את על GitHub Pages, אסור localhost.
+    // כאן את שמה את הכתובת של השרת שלך ב-Render (או כל שרת אחר):
+    const RENDER_API = "PUT_YOUR_RENDER_URL_HERE"; // לדוגמה: https://your-app.onrender.com
+
+    const API_BASE = (location.hostname.includes("github.io"))
+      ? RENDER_API
+      : "http://localhost:3000";
 
     async function fetchJson(path) {
       const res = await fetch(API_BASE + path);
-      const dataText = await res.text();
-      if (!res.ok) throw new Error(dataText || ("HTTP " + res.status));
-      return dataText ? JSON.parse(dataText) : null;
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || ("HTTP " + res.status));
+      }
+      return await res.json();
     }
 
     function escapeHtml(str) {
@@ -299,21 +310,16 @@
       participantsList.innerHTML = "";
 
       try {
-        // השרת מחזיר אצלך:
-        // [{ id: 1, full_name: "שירה זכרי" }, { id: 2, full_name: "הודיה אסתר זכרי" }]
         const parts = await fetchJson("/api/participants");
 
-        const names = (parts || []).map(p => {
-          if (typeof p === "string") return p;
-          return (p.full_name ?? p.name ?? p.fullName ?? "");
-        }).filter(Boolean);
+        participantsList.innerHTML = (parts || []).map(p => {
+          // תומך גם ב: { full_name: "..." } וגם ב: { name: "..." } וגם במחרוזת
+          const name =
+            (typeof p === "string") ? p :
+            (p.full_name ?? p.name ?? "");
+          return `<li>${escapeHtml(name)}</li>`;
+        }).join("");
 
-        if (names.length === 0) {
-          participantsStatus.innerHTML = `<span class="error">לא חזרו משתתפות מהשרת.</span>`;
-          return;
-        }
-
-        participantsList.innerHTML = names.map(n => `<li>${escapeHtml(n)}</li>`).join("");
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
       } catch (e) {
