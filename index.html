@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>פרויקט מסדי נתונים - ספרייה</title>
 
-  <link rel="stylesheet" href="style.css" />
-
   <style>
     body{
       margin:0;
@@ -140,9 +138,7 @@
 
         <div class="actions">
           <button id="btnLoadBooks">רשימת ספרים</button>
-
           <input id="searchInput" type="text" placeholder="חיפוש לפי שם ספר / מזהה..." disabled />
-
           <select id="sortSelect" disabled>
             <option value="product_id_asc">מיון: מזהה עולה</option>
             <option value="product_id_desc">מיון: מזהה יורד</option>
@@ -155,10 +151,7 @@
           </select>
         </div>
 
-        <div id="booksStatus" class="status hint">
-          לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים מהשרת.
-        </div>
-
+        <div id="booksStatus" class="status hint">לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים.</div>
         <div id="booksTableWrap"></div>
       </section>
 
@@ -170,10 +163,7 @@
           <button id="btnLoadParticipants">הצג משתתפות</button>
         </div>
 
-        <div id="participantsStatus" class="status hint">
-          לחצי על <b>הצג משתתפות</b> כדי להציג את הרשימה.
-        </div>
-
+        <div id="participantsStatus" class="status hint">לחצי על <b>הצג משתתפות</b> כדי להציג את הרשימה.</div>
         <ul id="participantsList" class="list" style="display:none;"></ul>
       </aside>
 
@@ -184,44 +174,19 @@
 
   <script>
     // =============================
-    // API BASE (Local / Render / GitHub Pages)
+    // API BASE (Local / Render)
     // =============================
-    // שימי כאן את הכתובת של השירות שעובד ב-Render:
+
+    // 🔥 חשוב: זו חייבת להיות הכתובת של השרת ב-Render של ה-API (ה-Web Service)
     const RENDER_API = "https://final-project-1-4tg9.onrender.com";
-    const isLocal =
-  location.hostname === "localhost" ||
-  location.hostname === "127.0.0.1" ||
-  location.hostname === "" ||
-  location.protocol === "file:";
 
-const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
-
-    // Local אם זה: localhost / 127.0.0.1 / file://
     const isLocal =
       location.hostname === "localhost" ||
       location.hostname === "127.0.0.1" ||
+      location.hostname === "" ||
       location.protocol === "file:";
 
     const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
-
-    async function fetchJson(path) {
-      const url = API_BASE + path;
-      const res = await fetch(url, { cache: "no-store" });
-
-      // חשוב: לקרוא כ-text ואז לנסות JSON (כדי לתפוס "Cannot GET ..." בצורה יפה)
-      const text = await res.text();
-
-      if (!res.ok) {
-        throw new Error(text || ("HTTP " + res.status));
-      }
-
-      // אם השרת החזיר טקסט שהוא לא JSON - נזרוק שגיאה ברורה
-      try {
-        return text ? JSON.parse(text) : null;
-      } catch {
-        throw new Error("השרת לא החזיר JSON. התקבל:\n" + text);
-      }
-    }
 
     function escapeHtml(str) {
       return String(str ?? "")
@@ -232,8 +197,27 @@ const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
         .replaceAll("'", "&#039;");
     }
 
+    async function fetchJson(path) {
+      const url = API_BASE + path;
+      const res = await fetch(url, { cache: "no-store" });
+      const contentType = res.headers.get("content-type") || "";
+      const text = await res.text();
+
+      if (!res.ok) {
+        throw new Error(`Request failed: ${res.status}\nURL: ${url}\n${text}`);
+      }
+
+      // אם זו תגובת JSON:
+      if (contentType.includes("application/json")) {
+        return text ? JSON.parse(text) : null;
+      }
+
+      // אחרת נחזיר טקסט (כדי לראות שגיאות כמו "Cannot GET ...")
+      return { _raw: text, _url: url };
+    }
+
     // =============================
-    // BOOKS
+    // BUTTONS / ELEMENTS
     // =============================
     const btnLoadBooks = document.getElementById("btnLoadBooks");
     const booksStatus = document.getElementById("booksStatus");
@@ -241,12 +225,16 @@ const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
     const searchInput = document.getElementById("searchInput");
     const sortSelect = document.getElementById("sortSelect");
 
+    const btnLoadParticipants = document.getElementById("btnLoadParticipants");
+    const participantsStatus = document.getElementById("participantsStatus");
+    const participantsList = document.getElementById("participantsList");
+
     let allBooks = [];
 
     function renderBooksTable(rows) {
       if (!Array.isArray(rows) || rows.length === 0) {
         booksTableWrap.innerHTML = "";
-        booksStatus.innerHTML = "<span class='error'>לא נמצאו ספרים.</span>";
+        booksStatus.innerHTML = "<span class='error'>לא נמצאו ספרים / התקבלה תשובה לא צפויה.</span>";
         return;
       }
 
@@ -278,7 +266,7 @@ const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
     }
 
     function applySearchAndSort() {
-      let rows = Array.isArray(allBooks) ? [...allBooks] : [];
+      let rows = [...allBooks];
 
       const q = (searchInput.value || "").trim().toLowerCase();
       if (q) {
@@ -309,39 +297,37 @@ const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
       renderBooksTable(rows);
     }
 
+    // =============================
+    // EVENTS
+    // =============================
     btnLoadBooks.addEventListener("click", async () => {
       booksStatus.textContent = "טוען ספרים מהשרת...";
       booksTableWrap.innerHTML = "";
 
       try {
+        // קודם נבדוק ping כדי לדעת שה-API באמת רץ
+        await fetchJson("/api/ping");
+
         const data = await fetchJson("/api/books");
 
-        // אם השרת מחזיר {ok:false,...} במקום מערך
-        if (!Array.isArray(data) && data && data.ok === false) {
-          throw new Error((data.message || "DB_QUERY_FAILED") + (data.error ? ("\n" + data.error) : ""));
+        // אם חזרה טקסט/HTML (טעות), נציג אותו
+        if (data && data._raw) {
+          throw new Error(`תשובה לא צפויה מהשרת:\n${data._raw}`);
         }
 
-        allBooks = Array.isArray(data) ? data : [];
+        allBooks = data || [];
         searchInput.disabled = false;
         sortSelect.disabled = false;
         applySearchAndSort();
       } catch (e) {
         searchInput.disabled = true;
         sortSelect.disabled = true;
-        booksStatus.innerHTML =
-          `<span class="error">שגיאה בטעינת ספרים:\n${escapeHtml(e.message)}</span>`;
+        booksStatus.innerHTML = `<span class="error">${escapeHtml(e.message)}</span>`;
       }
     });
 
     searchInput.addEventListener("input", applySearchAndSort);
     sortSelect.addEventListener("change", applySearchAndSort);
-
-    // =============================
-    // PARTICIPANTS
-    // =============================
-    const btnLoadParticipants = document.getElementById("btnLoadParticipants");
-    const participantsStatus = document.getElementById("participantsStatus");
-    const participantsList = document.getElementById("participantsList");
 
     btnLoadParticipants.addEventListener("click", async () => {
       participantsStatus.textContent = "טוען משתתפות...";
@@ -349,15 +335,16 @@ const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
       participantsList.innerHTML = "";
 
       try {
-        const parts = await fetchJson("/api/participants");
+        await fetchJson("/api/ping");
 
-        // אם השרת מחזיר אובייקט שגיאה
-        if (!Array.isArray(parts) && parts && parts.ok === false) {
-          throw new Error(parts.message || "שגיאה מהשרת");
+        const data = await fetchJson("/api/participants");
+
+        if (data && data._raw) {
+          throw new Error(`תשובה לא צפויה מהשרת:\n${data._raw}`);
         }
 
-        const arr = Array.isArray(parts) ? parts : [];
-        participantsList.innerHTML = arr.map(p => {
+        const parts = data || [];
+        participantsList.innerHTML = parts.map(p => {
           const name = (typeof p === "string") ? p : (p.full_name ?? p.name ?? "");
           return `<li>${escapeHtml(name)}</li>`;
         }).join("");
@@ -365,12 +352,9 @@ const API_BASE = isLocal ? "http://localhost:3000" : RENDER_API;
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
       } catch (e) {
-        participantsStatus.innerHTML =
-          `<span class="error">שגיאה בטעינת משתתפות:\n${escapeHtml(e.message)}</span>`;
+        participantsStatus.innerHTML = `<span class="error">${escapeHtml(e.message)}</span>`;
       }
     });
   </script>
 </body>
 </html>
-
-
