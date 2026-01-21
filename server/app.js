@@ -1,34 +1,43 @@
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
+const fs = require("fs");
 
 const app = express();
-
-/**
- * CORS:
- * מאפשר גם ל-GitHub Pages וגם ללוקאלי.
- * אם תרצי להקשיח עוד - אפשר לשים origin ספציפי.
- */
 app.use(cors());
 app.use(express.json());
 
-/**
- * DB CONFIG:
- * בלוקאלי: defaults
- * ב-Render: Environment Variables
- */
-const DB_CONFIG = {
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASS || "",
-  database: process.env.DB_NAME || "final_project",
-  port: Number(process.env.DB_PORT || 3306),
-  // אם יש לך DB אונליין שמחייב SSL:
-  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : undefined
-};
+// ==================
+// DB CONFIG
+// ==================
+function buildDbConfig() {
+  const host = process.env.DB_HOST || "localhost";
+  const user = process.env.DB_USER || "root";
+  const password = process.env.DB_PASS || "";
+  const database = process.env.DB_NAME || "final_project";
+  const port = Number(process.env.DB_PORT || 3306);
+
+  // SSL (Aiven בדרך כלל דורש)
+  const sslEnabled = String(process.env.DB_SSL || "").toLowerCase() === "true";
+
+  // אם שמנו Secret File ב-Render בשם ca.pem
+  const caPath = process.env.DB_CA_PATH || "/etc/secrets/ca.pem";
+
+  let ssl;
+  if (sslEnabled) {
+    // אם יש קובץ CA - נשתמש בו. אם לא, עדיין ננסה SSL בסיסי.
+    if (fs.existsSync(caPath)) {
+      ssl = { ca: fs.readFileSync(caPath, "utf8") };
+    } else {
+      ssl = { rejectUnauthorized: true };
+    }
+  }
+
+  return { host, user, password, database, port, ssl };
+}
 
 async function withConn(fn) {
-  const conn = await mysql.createConnection(DB_CONFIG);
+  const conn = await mysql.createConnection(buildDbConfig());
   try {
     return await fn(conn);
   } finally {
@@ -36,34 +45,33 @@ async function withConn(fn) {
   }
 }
 
-/** ✅ בדיקה הכי פשוטה שהשרת חי */
-app.get("/api/ping", (req, res) => {
-  res.json({ ok: true, message: "pong" });
-});
-
-/** ✅ בדיקה גם ל-DB */
+// ==================
+// HEALTH CHECK
+// ==================
 app.get("/api/health", async (req, res) => {
   try {
-    const dbOk = await withConn(async (conn) => {
+    await withConn(async (conn) => {
       await conn.execute("SELECT 1");
-      return true;
-    }).catch(() => false);
-
-    res.json({ ok: true, db: dbOk });
+    });
+    res.json({ ok: true, db: true });
   } catch (err) {
-    res.status(500).json({ ok: false, message: err.message });
+    res.json({ ok: true, db: false, db_error: err.message });
   }
 });
 
-/** ✅ משתתפות — קבוע */
+// ==================
+// PARTICIPANTS
+// ==================
 app.get("/api/participants", (req, res) => {
   res.json([
     { id: 1, full_name: "שירה זכרי" },
-    { id: 2, full_name: "הודיה אסתר זכרי" }
+    { id: 2, full_name: "הודיה אסתר זכרי" },
   ]);
 });
 
-/** ✅ ספרים — מה-DB */
+// ==================
+// BOOKS
+// ==================
 app.get("/api/books", async (req, res) => {
   try {
     const rows = await withConn(async (conn) => {
@@ -86,11 +94,14 @@ app.get("/api/books", async (req, res) => {
     res.status(500).json({
       ok: false,
       error: "DB_QUERY_FAILED",
-      message: err.message
+      message: err.message,
     });
   }
 });
 
+// ==================
+// SERVER
+// ==================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log("Server running on port " + PORT);
