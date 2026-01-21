@@ -68,8 +68,8 @@ app.get("/api/books", async (req, res) => {
           b.number_of_pages,
           b.author_id,
           p.price
-        FROM book b
-        JOIN product p ON p.product_id = b.product_id
+        FROM Book b
+        JOIN Product p ON p.product_id = b.product_id
         ORDER BY b.product_id
       `);
       return r;
@@ -80,10 +80,11 @@ app.get("/api/books", async (req, res) => {
     res.status(500).json({
       ok: false,
       error: "DB_QUERY_FAILED",
-      message: err.message
+      message: err.message,
     });
   }
 });
+
 
 // ==================
 // SERVER
