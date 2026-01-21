@@ -11,11 +11,14 @@ app.use(express.json());
 // DB CONFIG
 // ==================
 function buildDbConfig() {
-  const host = process.env.DB_HOST || "localhost";
-  const user = process.env.DB_USER || "root";
-  const password = process.env.DB_PASS || "";
-  const database = process.env.DB_NAME || "final_project";
-  const port = Number(process.env.DB_PORT || 3306);
+  const DB_CONFIG = {
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASS || "",
+  database: process.env.DB_NAME || "final_project",
+  port: Number(process.env.DB_PORT || 3306),
+  ssl: { rejectUnauthorized: false }
+};
 
   // SSL (Aiven בדרך כלל דורש)
   const sslEnabled = String(process.env.DB_SSL || "").toLowerCase() === "true";
