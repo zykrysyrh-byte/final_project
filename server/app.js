@@ -1,3 +1,4 @@
+// server/app.js
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
@@ -8,35 +9,32 @@ app.use(cors());
 app.use(express.json());
 
 // ==================
-// DB CONFIG
+// DB CONFIG (Render + Aiven)
 // ==================
 function buildDbConfig() {
-  return {
-    host: process.env.DB_HOST || "localhost",
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASS || "",
-    database: process.env.DB_NAME || "final_project",
-    port: Number(process.env.DB_PORT || 3306),
+  const host = process.env.DB_HOST || "localhost";
+  const user = process.env.DB_USER || "root";
+  const password = process.env.DB_PASS || "";
+  const database = process.env.DB_NAME || "final_project";
+  const port = Number(process.env.DB_PORT || 3306);
 
-    // Aiven (MySQL) לרוב דורש SSL
-    ssl: { rejectUnauthorized: false },
-  };
-}
-
-
-  // SSL (Aiven בדרך כלל דורש)
-  const sslEnabled = String(process.env.DB_SSL || "").toLowerCase() === "true";
-
-  // אם שמנו Secret File ב-Render בשם ca.pem
+  // SSL handling:
+  // 1) If you provided a CA file (Render Secret File), use it.
+  // 2) Otherwise, fallback to rejectUnauthorized:false (works for many hosted MySQL setups).
+  const sslEnabled = String(process.env.DB_SSL || "true").toLowerCase() === "true";
   const caPath = process.env.DB_CA_PATH || "/etc/secrets/ca.pem";
 
-  let ssl;
+  let ssl = undefined;
+
   if (sslEnabled) {
-    // אם יש קובץ CA - נשתמש בו. אם לא, עדיין ננסה SSL בסיסי.
-    if (fs.existsSync(caPath)) {
-      ssl = { ca: fs.readFileSync(caPath, "utf8") };
-    } else {
-      ssl = { rejectUnauthorized: true };
+    try {
+      if (fs.existsSync(caPath)) {
+        ssl = { ca: fs.readFileSync(caPath, "utf8") };
+      } else {
+        ssl = { rejectUnauthorized: false };
+      }
+    } catch (e) {
+      ssl = { rejectUnauthorized: false };
     }
   }
 
@@ -64,6 +62,13 @@ app.get("/api/health", async (req, res) => {
   } catch (err) {
     res.json({ ok: true, db: false, db_error: err.message });
   }
+});
+
+// ==================
+// PING (optional but useful)
+// ==================
+app.get("/api/ping", (req, res) => {
+  res.json({ ok: true, pong: true });
 });
 
 // ==================
@@ -112,4 +117,12 @@ app.get("/api/books", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log("Server running on port " + PORT);
+  console.log("DB config:", {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    db: process.env.DB_NAME,
+    port: process.env.DB_PORT,
+    ssl: process.env.DB_SSL,
+    caPath: process.env.DB_CA_PATH,
+  });
 });
