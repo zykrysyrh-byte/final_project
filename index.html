@@ -90,7 +90,8 @@
   </main>
 
   <script>
-    const API_BASE = "https://final-project-1-4tg9.onrender.com"; // Render URL
+    // ====== Render API Base ======
+    const API_BASE = "https://final-project-1-4tg9.onrender.com";
 
     async function fetchJson(path) {
       const url = API_BASE + path;
@@ -210,18 +211,15 @@
     }
 
     btnLoadBooks.addEventListener("click", async () => {
-      // toggle close
       if (booksOpen) {
         closeBooksUI();
         return;
       }
 
-      // open
       booksOpen = true;
       btnLoadBooks.textContent = "סגור ספרים";
       booksTableWrap.style.display = "block";
 
-      // show cached
       if (booksLoadedOnce && allBooks.length) {
         searchInput.disabled = false;
         sortSelect.disabled = false;
@@ -236,7 +234,6 @@
       try {
         allBooks = await fetchJson("/api/books");
         booksLoadedOnce = true;
-
         searchInput.disabled = false;
         sortSelect.disabled = false;
         applySearchAndSort();
@@ -271,17 +268,14 @@
     }
 
     btnLoadParticipants.addEventListener("click", async () => {
-      // toggle close
       if (participantsOpen) {
         closeParticipantsUI();
         return;
       }
 
-      // open
       participantsOpen = true;
       btnLoadParticipants.textContent = "סגור משתתפים";
 
-      // show cached
       if (participantsLoadedOnce && cachedParticipants.length) {
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
