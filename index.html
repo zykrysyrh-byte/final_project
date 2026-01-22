@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>פרויקט מסדי נתונים - ספרייה</title>
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=9" />
 </head>
 
 <body>
@@ -99,6 +99,7 @@
   <script>
     const API_BASE = "https://final-project-1-4tg9.onrender.com";
 
+    // --- helpers ---
     async function fetchJson(path) {
       const res = await fetch(API_BASE + path);
       const ct = res.headers.get("content-type") || "";
@@ -122,31 +123,18 @@
       const s = btn.querySelector(".spinner--btn");
       if (on) {
         btn.disabled = true;
-        btn.classList.add("is-loading");
         if (txt) t.textContent = txt;
         s.style.display = "inline-block";
       } else {
         btn.disabled = false;
-        btn.classList.remove("is-loading");
         s.style.display = "none";
       }
     }
 
-    // Hide spinners initially
+    // hide all spinners at start
     document.querySelectorAll(".spinner--btn").forEach(x => x.style.display = "none");
 
-    // ---- State ----
-    let openPanel = null; // "books" | "participants" | null
-
-    // Books cache
-    let booksLoaded = false;
-    let allBooks = [];
-
-    // Participants cache
-    let participantsLoaded = false;
-    let participantsCache = [];
-
-    // ---- DOM ----
+    // --- DOM ---
     const btnBooks = document.getElementById("btnBooks");
     const booksStatus = document.getElementById("booksStatus");
     const booksWrap = document.getElementById("booksWrap");
@@ -158,34 +146,49 @@
     const participantsStatus = document.getElementById("participantsStatus");
     const participantsList = document.getElementById("participantsList");
 
-    // ---- Helpers open/close ----
-    function closeBooks() {
+    // --- state ---
+    let booksOpen = false;
+    let participantsOpen = false;
+
+    let booksLoaded = false;
+    let allBooks = [];
+
+    let participantsLoaded = false;
+    let participantsCache = [];
+
+    // --- open/close functions (מסתירים בלבד, לא מוחקים תוכן!) ---
+    function closeBooksUI() {
+      booksOpen = false;
       booksWrap.style.display = "none";
-      booksWrap.innerHTML = "";
       booksCounter.style.display = "none";
-      searchInput.value = "";
       searchInput.disabled = true;
       sortSelect.disabled = true;
       btnBooks.querySelector(".btn__text").textContent = "רשימת ספרים";
       booksStatus.innerHTML = `לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים מה־DB.`;
-      if (openPanel === "books") openPanel = null;
     }
 
-    function closeParticipants() {
+    function openBooksUI() {
+      booksOpen = true;
+      booksWrap.style.display = "block";
+      btnBooks.querySelector(".btn__text").textContent = "סגור ספרים";
+      searchInput.disabled = !booksLoaded;
+      sortSelect.disabled = !booksLoaded;
+    }
+
+    function closeParticipantsUI() {
+      participantsOpen = false;
       participantsList.style.display = "none";
-      participantsList.innerHTML = "";
       btnParticipants.querySelector(".btn__text").textContent = "הצג משתתפים";
       participantsStatus.innerHTML = `לחצי על <b>הצג משתתפים</b> כדי להציג את הרשימה.`;
-      if (openPanel === "participants") openPanel = null;
     }
 
-    function openOnly(panel) {
-      if (panel === "books" && openPanel === "participants") closeParticipants();
-      if (panel === "participants" && openPanel === "books") closeBooks();
-      openPanel = panel;
+    function openParticipantsUI() {
+      participantsOpen = true;
+      participantsList.style.display = "block";
+      btnParticipants.querySelector(".btn__text").textContent = "סגור משתתפים";
     }
 
-    // ---- Books rendering ----
+    // --- render books ---
     function renderBooks(rows) {
       if (!rows || rows.length === 0) {
         booksStatus.innerHTML = "<span class='error'>לא נמצאו ספרים.</span>";
@@ -218,7 +221,6 @@
           </tbody>
         </table>
       `;
-
       booksCounter.style.display = "inline-flex";
       booksCounter.textContent = `מוצגים ${rows.length} ספרים`;
       booksStatus.innerHTML = `<span class="ok">נטענו ${rows.length} ספרים בהצלחה.</span>`;
@@ -255,84 +257,70 @@
       renderBooks(rows);
     }
 
-    // ---- Toggle Books ----
+    // --- events ---
     btnBooks.addEventListener("click", async () => {
-      // אם כבר פתוח -> סגור
-      if (openPanel === "books") {
-        closeBooks();
+      // toggle close
+      if (booksOpen) {
+        closeBooksUI();
         return;
       }
 
-      // פותחים Books וסוגרים Participants אם צריך
-      openOnly("books");
+      // ✅ open books and force close participants
+      if (participantsOpen) closeParticipantsUI();
+      openBooksUI();
 
-      // UI open
-      btnBooks.querySelector(".btn__text").textContent = "סגור ספרים";
-      booksWrap.style.display = "block";
-
-      // אם כבר נטען פעם אחת -> רק להציג
+      // if already loaded -> render from cache
       if (booksLoaded) {
-        searchInput.disabled = false;
-        sortSelect.disabled = false;
         applySearchSort();
         return;
       }
 
-      // לטעון עם ספינר
       setBtnLoading(btnBooks, true, "טוען ספרים...");
       booksStatus.textContent = "טוען ספרים מה־DB...";
       booksWrap.innerHTML = "";
-      booksCounter.style.display = "none";
 
       try {
         allBooks = await fetchJson("/api/books");
         booksLoaded = true;
-
         searchInput.disabled = false;
         sortSelect.disabled = false;
         applySearchSort();
       } catch (e) {
-        closeBooks();
+        closeBooksUI();
         booksStatus.innerHTML = `<span class="error">שגיאה בטעינת ספרים: ${escapeHtml(e.message)}</span>`;
       } finally {
         setBtnLoading(btnBooks, false);
-        if (openPanel === "books") btnBooks.querySelector(".btn__text").textContent = "סגור ספרים";
+        if (booksOpen) btnBooks.querySelector(".btn__text").textContent = "סגור ספרים";
       }
     });
 
-    searchInput.addEventListener("input", () => { if (openPanel === "books") applySearchSort(); });
-    sortSelect.addEventListener("change", () => { if (openPanel === "books") applySearchSort(); });
+    searchInput.addEventListener("input", () => { if (booksOpen) applySearchSort(); });
+    sortSelect.addEventListener("change", () => { if (booksOpen) applySearchSort(); });
 
-    // ---- Toggle Participants ----
     btnParticipants.addEventListener("click", async () => {
-      // אם כבר פתוח -> סגור
-      if (openPanel === "participants") {
-        closeParticipants();
+      // toggle close
+      if (participantsOpen) {
+        closeParticipantsUI();
         return;
       }
 
-      // פותחים משתתפות וסוגרים Books אם צריך
-      openOnly("participants");
+      // ✅ open participants and force close books
+      if (booksOpen) closeBooksUI();
+      openParticipantsUI();
 
-      // UI open
-      btnParticipants.querySelector(".btn__text").textContent = "סגור משתתפים";
-      participantsList.style.display = "block";
-
-      // אם כבר נטען -> להציג מהקאש
+      // if already loaded -> show from cache (הכי חשוב ללחיצה השנייה!)
       if (participantsLoaded) {
         participantsList.innerHTML = participantsCache.map(n => `<li>${escapeHtml(n)}</li>`).join("");
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
         return;
       }
 
-      // טוען עם ספינר
       setBtnLoading(btnParticipants, true, "טוען...");
       participantsStatus.textContent = "טוען משתתפות...";
       participantsList.innerHTML = "";
 
       try {
         const parts = await fetchJson("/api/participants");
-
         participantsCache = (parts || []).map(p => {
           const name =
             (typeof p === "string") ? p :
@@ -345,11 +333,11 @@
         participantsList.innerHTML = participantsCache.map(n => `<li>${escapeHtml(n)}</li>`).join("");
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
       } catch (e) {
-        closeParticipants();
+        closeParticipantsUI();
         participantsStatus.innerHTML = `<span class="error">שגיאה בטעינת משתתפות: ${escapeHtml(e.message)}</span>`;
       } finally {
         setBtnLoading(btnParticipants, false);
-        if (openPanel === "participants") btnParticipants.querySelector(".btn__text").textContent = "סגור משתתפים";
+        if (participantsOpen) btnParticipants.querySelector(".btn__text").textContent = "סגור משתתפים";
       }
     });
   </script>
