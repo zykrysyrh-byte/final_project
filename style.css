@@ -343,3 +343,35 @@ input:focus, select:focus{
   color: rgba(255,255,255,.75);
 }
 
+/* ===== Header info (Database + Participants) ===== */
+
+.hero {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.subtitle {
+  max-width: 900px;
+  margin: 0 auto 14px;
+  color: rgba(255,255,255,.9);
+  text-shadow: 0 2px 10px rgba(0,0,0,.4);
+}
+
+.meta {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  background: rgba(0,0,0,.45);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.25);
+}
+
+
