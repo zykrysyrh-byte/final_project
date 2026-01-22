@@ -10,8 +10,6 @@
   --shadow-soft: 0 14px 40px rgba(0,0,0,.16);
 
   --radius: 22px;
-  --radius-sm: 14px;
-
   --accent: #2563eb;
   --accent2: #06b6d4;
 }
@@ -25,27 +23,32 @@ body{
   color: var(--text);
 }
 
-/* ===== Background: bright + glow center ===== */
+/* ✅ רקע: עדיין בהיר ויפה, אבל יותר כהה כדי שהטקסט יבלוט */
 .bg{
   position: fixed;
   inset: 0;
   z-index: -1;
 
-  /* 3 שכבות:
-     1) "Glow" בהיר במרכז שמושך עין
-     2) Gradient עדין מלמעלה למטה
-     3) התמונה עצמה
+  /* 4 שכבות:
+     1) Glow עדין
+     2) לבן קל (כדי לא להיות חשוך)
+     3) כהה קל (כדי שהטקסט יקבל קונטרסט)
+     4) התמונה
   */
   background:
     radial-gradient(circle at 50% 22%,
-      rgba(255,255,255,.78) 0%,
-      rgba(255,255,255,.40) 38%,
-      rgba(255,255,255,.18) 62%,
-      rgba(255,255,255,.08) 100%
+      rgba(255,255,255,.62) 0%,
+      rgba(255,255,255,.32) 40%,
+      rgba(255,255,255,.12) 70%,
+      rgba(255,255,255,.06) 100%
     ),
     linear-gradient(
-      rgba(255,255,255,.30),
-      rgba(255,255,255,.52)
+      rgba(255,255,255,.16),
+      rgba(255,255,255,.26)
+    ),
+    linear-gradient(
+      rgba(0,0,0,.10),
+      rgba(0,0,0,.20)
     ),
     url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=2200&q=60");
   background-size: cover;
@@ -53,7 +56,7 @@ body{
   background-attachment: fixed;
 }
 
-/* ===== Hero ===== */
+/* HERO */
 .hero{
   padding: 64px 18px 26px;
 }
@@ -67,12 +70,12 @@ h1{
   font-size: clamp(30px, 4.2vw, 52px);
   letter-spacing: .6px;
   line-height: 1.1;
-  text-shadow: 0 10px 30px rgba(255,255,255,.70);
+  text-shadow: 0 10px 30px rgba(255,255,255,.65);
 }
 .subtitle{
   margin: 0 auto 18px;
   max-width: 920px;
-  color: var(--muted);
+  color: rgba(15,23,42,.82);
   line-height: 1.7;
   font-size: 16px;
 }
@@ -85,7 +88,7 @@ h1{
   flex-wrap:wrap;
 }
 .pill{
-  background: rgba(255,255,255,.78);
+  background: rgba(255,255,255,.82);
   border: 1px solid rgba(15,23,42,.10);
   color: rgba(15,23,42,.90);
   padding: 8px 14px;
@@ -94,7 +97,7 @@ h1{
   box-shadow: 0 10px 28px rgba(0,0,0,.10);
 }
 
-/* ===== Layout ===== */
+/* LAYOUT */
 .container{
   max-width: 1120px;
   margin: 0 auto;
@@ -109,7 +112,7 @@ h1{
   .grid{ grid-template-columns: 1fr; }
 }
 
-/* ===== Cards ===== */
+/* CARDS */
 .card{
   background: var(--glass);
   border: 1px solid var(--border);
@@ -121,8 +124,6 @@ h1{
   position: relative;
   overflow: hidden;
 }
-
-/* Highlight line (subtle) */
 .card::before{
   content:"";
   position:absolute;
@@ -134,7 +135,6 @@ h1{
   );
   pointer-events:none;
 }
-
 .card__head{
   display:flex;
   justify-content: space-between;
@@ -149,7 +149,7 @@ h1{
   position: relative;
 }
 
-/* ===== Controls ===== */
+/* CONTROLS */
 .controls{
   display:flex;
   gap: 14px;
@@ -157,7 +157,6 @@ h1{
   align-items: end;
   position: relative;
 }
-
 .field{
   display:flex;
   flex-direction: column;
@@ -169,7 +168,6 @@ h1{
   color: rgba(15,23,42,.75);
   font-size: 13px;
 }
-
 input, select{
   height: 46px;
   border-radius: 14px;
@@ -180,22 +178,19 @@ input, select{
   outline: none;
   box-shadow: 0 10px 26px rgba(0,0,0,.08);
 }
-
 input::placeholder{ color:#64748b; }
-
 input:focus, select:focus{
   border-color: rgba(37,99,235,.38);
   box-shadow: 0 0 0 4px rgba(37,99,235,.14), 0 10px 26px rgba(0,0,0,.10);
 }
 
-/* ===== Buttons ===== */
+/* BUTTONS */
 .actions{
   display:flex;
   gap: 10px;
   align-items:center;
   position: relative;
 }
-
 .btn{
   height: 46px;
   padding: 0 16px;
@@ -207,13 +202,19 @@ input:focus, select:focus{
   font-weight: 800;
   box-shadow: 0 12px 30px rgba(0,0,0,.10);
   transition: transform .10s ease, box-shadow .20s ease, background .20s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
 }
 .btn:hover{
   background:#fff;
   box-shadow: 0 16px 40px rgba(0,0,0,.14);
 }
 .btn:active{ transform: scale(.98); }
-
+.btn:disabled{
+  opacity: .75;
+  cursor: not-allowed;
+}
 .btn--primary{
   border: none;
   color: #fff;
@@ -223,7 +224,24 @@ input:focus, select:focus{
   box-shadow: 0 18px 46px rgba(37,99,235,.22);
 }
 
-/* ===== Status ===== */
+/* ✅ Spinner animation */
+.spinner{
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.55);
+  border-top-color: rgba(255,255,255,1);
+  animation: spin .8s linear infinite;
+}
+.btn:not(.btn--primary) .spinner{
+  border: 2px solid rgba(15,23,42,.25);
+  border-top-color: rgba(15,23,42,.75);
+}
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
+
+/* STATUS */
 .hint{
   margin: 14px 0 0;
   color: rgba(15,23,42,.72);
@@ -250,7 +268,7 @@ input:focus, select:focus{
   box-shadow: var(--shadow-soft);
 }
 
-/* ===== Table ===== */
+/* TABLE */
 .tableWrap{
   margin-top: 14px;
   overflow:auto;
@@ -259,13 +277,11 @@ input:focus, select:focus{
   background: rgba(255,255,255,.92);
   box-shadow: var(--shadow-soft);
 }
-
 .table{
   width:100%;
   border-collapse: collapse;
   min-width: 680px;
 }
-
 .table th, .table td{
   padding: 12px;
   border-bottom: 1px solid rgba(15,23,42,.10);
@@ -273,7 +289,6 @@ input:focus, select:focus{
   font-size: 14px;
   white-space: nowrap;
 }
-
 .table thead th{
   position: sticky;
   top: 0;
@@ -282,21 +297,19 @@ input:focus, select:focus{
   backdrop-filter: blur(10px);
   font-weight: 900;
 }
-
 .table tbody tr:nth-child(even){
   background: rgba(15,23,42,.03);
 }
 .table tbody tr:hover{
   background: rgba(37,99,235,.08);
 }
-
 .cell-title{
   max-width: 360px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ===== Participants list ===== */
+/* Participants list */
 .list{
   margin: 12px 0 0 0;
   padding: 0 18px 0 0;
@@ -310,7 +323,7 @@ input:focus, select:focus{
   box-shadow: 0 10px 24px rgba(0,0,0,.08);
 }
 
-/* ===== Footer ===== */
+/* FOOTER */
 .footer{
   padding: 22px 0 0;
   text-align:center;
@@ -318,7 +331,6 @@ input:focus, select:focus{
   font-size: 12px;
 }
 
-/* Better mobile spacing */
 @media (max-width: 520px){
   .hero{ padding-top: 52px; }
   .btn, input, select{ height: 44px; border-radius: 13px; }
