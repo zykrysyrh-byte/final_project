@@ -37,7 +37,10 @@
 
         <div class="controls">
           <div class="actions">
-            <button class="btn btn--primary" id="btnLoadBooks">רשימת ספרים</button>
+            <button class="btn btn--primary" id="btnLoadBooks">
+              <span class="btn__text">רשימת ספרים</span>
+              <span class="spinner spinner--btn" aria-hidden="true"></span>
+            </button>
           </div>
 
           <div class="field">
@@ -74,7 +77,10 @@
         </div>
 
         <div class="actions">
-          <button class="btn" id="btnLoadParticipants">הצג משתתפים</button>
+          <button class="btn" id="btnLoadParticipants">
+            <span class="btn__text">הצג משתתפים</span>
+            <span class="spinner spinner--btn" aria-hidden="true"></span>
+          </button>
         </div>
 
         <div id="participantsStatus" class="status hint">
@@ -90,13 +96,11 @@
   </main>
 
   <script>
-    // ====== Render API Base ======
     const API_BASE = "https://final-project-1-4tg9.onrender.com";
 
     async function fetchJson(path) {
       const url = API_BASE + path;
       const res = await fetch(url);
-
       const contentType = res.headers.get("content-type") || "";
       const text = await res.text();
 
@@ -116,6 +120,21 @@
         .replaceAll("'", "&#039;");
     }
 
+    function setBtnLoading(btn, isLoading, loadingText) {
+      const t = btn.querySelector(".btn__text");
+      const spinner = btn.querySelector(".spinner--btn");
+      if (isLoading) {
+        btn.classList.add("is-loading");
+        btn.disabled = true;
+        if (loadingText) t.textContent = loadingText;
+        spinner.style.display = "inline-block";
+      } else {
+        btn.classList.remove("is-loading");
+        btn.disabled = false;
+        spinner.style.display = "none";
+      }
+    }
+
     // ---------- BOOKS ----------
     const btnLoadBooks = document.getElementById("btnLoadBooks");
     const booksStatus = document.getElementById("booksStatus");
@@ -127,6 +146,7 @@
     let allBooks = [];
     let booksOpen = false;
     let booksLoadedOnce = false;
+    let booksLoadingNow = false;
 
     function renderBooksTable(rows) {
       if (!rows || rows.length === 0) {
@@ -200,26 +220,36 @@
 
     function closeBooksUI() {
       booksOpen = false;
-      btnLoadBooks.textContent = "רשימת ספרים";
+      booksLoadingNow = false;
+      setBtnLoading(btnLoadBooks, false);
+      btnLoadBooks.querySelector(".btn__text").textContent = "רשימת ספרים";
+
       booksTableWrap.style.display = "none";
       booksTableWrap.innerHTML = "";
       booksCounter.style.display = "none";
+
       searchInput.value = "";
       searchInput.disabled = true;
       sortSelect.disabled = true;
+
       booksStatus.innerHTML = `לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים מה־DB.`;
     }
 
     btnLoadBooks.addEventListener("click", async () => {
+      if (booksLoadingNow) return;
+
+      // close
       if (booksOpen) {
         closeBooksUI();
         return;
       }
 
+      // open
       booksOpen = true;
-      btnLoadBooks.textContent = "סגור ספרים";
+      btnLoadBooks.querySelector(".btn__text").textContent = "סגור ספרים";
       booksTableWrap.style.display = "block";
 
+      // cached
       if (booksLoadedOnce && allBooks.length) {
         searchInput.disabled = false;
         sortSelect.disabled = false;
@@ -227,28 +257,33 @@
         return;
       }
 
-      booksStatus.textContent = "טוען ספרים מה־DB...";
+      // load
+      booksLoadingNow = true;
+      setBtnLoading(btnLoadBooks, true, "טוען ספרים...");
+      booksStatus.innerHTML = `<span class="hint">טוען ספרים מה־DB...</span>`;
       booksTableWrap.innerHTML = "";
       booksCounter.style.display = "none";
 
       try {
         allBooks = await fetchJson("/api/books");
         booksLoadedOnce = true;
+
         searchInput.disabled = false;
         sortSelect.disabled = false;
         applySearchAndSort();
       } catch (e) {
         closeBooksUI();
         booksStatus.innerHTML = `<span class="error">שגיאה בטעינת ספרים: ${escapeHtml(e.message)}</span>`;
+        return;
+      } finally {
+        booksLoadingNow = false;
+        setBtnLoading(btnLoadBooks, false);
+        btnLoadBooks.querySelector(".btn__text").textContent = "סגור ספרים";
       }
     });
 
-    searchInput.addEventListener("input", () => {
-      if (booksOpen) applySearchAndSort();
-    });
-    sortSelect.addEventListener("change", () => {
-      if (booksOpen) applySearchAndSort();
-    });
+    searchInput.addEventListener("input", () => { if (booksOpen) applySearchAndSort(); });
+    sortSelect.addEventListener("change", () => { if (booksOpen) applySearchAndSort(); });
 
     // ---------- PARTICIPANTS ----------
     const btnLoadParticipants = document.getElementById("btnLoadParticipants");
@@ -258,31 +293,43 @@
     let participantsOpen = false;
     let participantsLoadedOnce = false;
     let cachedParticipants = [];
+    let participantsLoadingNow = false;
 
     function closeParticipantsUI() {
       participantsOpen = false;
-      btnLoadParticipants.textContent = "הצג משתתפים";
+      participantsLoadingNow = false;
+      setBtnLoading(btnLoadParticipants, false);
+      btnLoadParticipants.querySelector(".btn__text").textContent = "הצג משתתפים";
+
       participantsList.style.display = "none";
       participantsList.innerHTML = "";
       participantsStatus.innerHTML = `לחצי על <b>הצג משתתפים</b> כדי להציג את הרשימה.`;
     }
 
     btnLoadParticipants.addEventListener("click", async () => {
+      if (participantsLoadingNow) return;
+
+      // close
       if (participantsOpen) {
         closeParticipantsUI();
         return;
       }
 
+      // open
       participantsOpen = true;
-      btnLoadParticipants.textContent = "סגור משתתפים";
+      btnLoadParticipants.querySelector(".btn__text").textContent = "סגור משתתפים";
 
+      // cached
       if (participantsLoadedOnce && cachedParticipants.length) {
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
         return;
       }
 
-      participantsStatus.textContent = "טוען משתתפות...";
+      // load
+      participantsLoadingNow = true;
+      setBtnLoading(btnLoadParticipants, true, "טוען...");
+      participantsStatus.innerHTML = `<span class="hint">טוען משתתפות...</span>`;
       participantsList.style.display = "none";
       participantsList.innerHTML = "";
 
@@ -303,8 +350,16 @@
       } catch (e) {
         closeParticipantsUI();
         participantsStatus.innerHTML = `<span class="error">שגיאה בטעינת משתתפות: ${escapeHtml(e.message)}</span>`;
+        return;
+      } finally {
+        participantsLoadingNow = false;
+        setBtnLoading(btnLoadParticipants, false);
+        btnLoadParticipants.querySelector(".btn__text").textContent = "סגור משתתפים";
       }
     });
+
+    // Hide spinners by default
+    document.querySelectorAll(".spinner--btn").forEach(s => s.style.display = "none");
   </script>
 </body>
 </html>
