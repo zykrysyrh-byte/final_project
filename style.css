@@ -283,3 +283,63 @@ input:focus, select:focus{
   .btn, input, select{ height:44px; border-radius:13px; }
   .card{ padding:18px; }
 }
+/* ==== Add-ons for 100/100 UX ==== */
+
+.btn--ghost{
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.18);
+}
+.btn--ghost:hover{ background: rgba(255,255,255,.14); }
+.btn--ghost:disabled{ opacity:.6; cursor:not-allowed; }
+
+.inputWrap{
+  position: relative;
+  display:flex;
+  align-items:center;
+}
+.inputWrap input{
+  width: 100%;
+  padding-left: 44px; /* space for X */
+}
+.clearBtn{
+  position:absolute;
+  left: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.9);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.clearBtn:hover{ background: rgba(255,255,255,.14); }
+
+.hl{
+  background: rgba(255, 215, 0, .35);
+  color: rgba(255,255,255,.98);
+  padding: 0 .18em;
+  border-radius: 8px;
+}
+
+.table .num{
+  text-align: left;   /* numbers look better */
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+
+.emptyBox{
+  padding: 18px;
+  color: rgba(255,255,255,.9);
+}
+.emptyTitle{
+  font-weight: 900;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+.emptySub{
+  color: rgba(255,255,255,.75);
+}
+
