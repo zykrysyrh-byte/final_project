@@ -64,7 +64,7 @@
           לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים מה־DB.
         </div>
 
-        <div id="booksTableWrap" class="tableWrap"></div>
+        <div id="booksTableWrap" class="tableWrap" style="display:none;"></div>
       </section>
 
       <!-- PARTICIPANTS -->
@@ -90,12 +90,7 @@
   </main>
 
   <script>
-    // =========================
-    // חשוב:
-    // אם את בודקת מקומית (כששרת רץ אצלך): "http://localhost:3000"
-    // אם את בודקת דרך GitHub Pages: כאן חייב להיות ה-URL של Render (https)
-    // =========================
-    const API_BASE = "https://final-project-1-4tg9.onrender.com";
+    const API_BASE = "https://final-project-1-4tg9.onrender.com"; // Render URL
 
     async function fetchJson(path) {
       const url = API_BASE + path;
@@ -129,6 +124,8 @@
     const booksCounter = document.getElementById("booksCounter");
 
     let allBooks = [];
+    let booksOpen = false;
+    let booksLoadedOnce = false;
 
     function renderBooksTable(rows) {
       if (!rows || rows.length === 0) {
@@ -200,40 +197,107 @@
       renderBooksTable(rows);
     }
 
+    function closeBooksUI() {
+      booksOpen = false;
+      btnLoadBooks.textContent = "רשימת ספרים";
+      booksTableWrap.style.display = "none";
+      booksTableWrap.innerHTML = "";
+      booksCounter.style.display = "none";
+      searchInput.value = "";
+      searchInput.disabled = true;
+      sortSelect.disabled = true;
+      booksStatus.innerHTML = `לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים מה־DB.`;
+    }
+
     btnLoadBooks.addEventListener("click", async () => {
+      // toggle close
+      if (booksOpen) {
+        closeBooksUI();
+        return;
+      }
+
+      // open
+      booksOpen = true;
+      btnLoadBooks.textContent = "סגור ספרים";
+      booksTableWrap.style.display = "block";
+
+      // show cached
+      if (booksLoadedOnce && allBooks.length) {
+        searchInput.disabled = false;
+        sortSelect.disabled = false;
+        applySearchAndSort();
+        return;
+      }
+
       booksStatus.textContent = "טוען ספרים מה־DB...";
       booksTableWrap.innerHTML = "";
       booksCounter.style.display = "none";
 
       try {
         allBooks = await fetchJson("/api/books");
+        booksLoadedOnce = true;
+
         searchInput.disabled = false;
         sortSelect.disabled = false;
         applySearchAndSort();
       } catch (e) {
-        searchInput.disabled = true;
-        sortSelect.disabled = true;
+        closeBooksUI();
         booksStatus.innerHTML = `<span class="error">שגיאה בטעינת ספרים: ${escapeHtml(e.message)}</span>`;
       }
     });
 
-    searchInput.addEventListener("input", applySearchAndSort);
-    sortSelect.addEventListener("change", applySearchAndSort);
+    searchInput.addEventListener("input", () => {
+      if (booksOpen) applySearchAndSort();
+    });
+    sortSelect.addEventListener("change", () => {
+      if (booksOpen) applySearchAndSort();
+    });
 
     // ---------- PARTICIPANTS ----------
     const btnLoadParticipants = document.getElementById("btnLoadParticipants");
     const participantsStatus = document.getElementById("participantsStatus");
     const participantsList = document.getElementById("participantsList");
 
+    let participantsOpen = false;
+    let participantsLoadedOnce = false;
+    let cachedParticipants = [];
+
+    function closeParticipantsUI() {
+      participantsOpen = false;
+      btnLoadParticipants.textContent = "הצג משתתפים";
+      participantsList.style.display = "none";
+      participantsList.innerHTML = "";
+      participantsStatus.innerHTML = `לחצי על <b>הצג משתתפים</b> כדי להציג את הרשימה.`;
+    }
+
     btnLoadParticipants.addEventListener("click", async () => {
+      // toggle close
+      if (participantsOpen) {
+        closeParticipantsUI();
+        return;
+      }
+
+      // open
+      participantsOpen = true;
+      btnLoadParticipants.textContent = "סגור משתתפים";
+
+      // show cached
+      if (participantsLoadedOnce && cachedParticipants.length) {
+        participantsList.style.display = "block";
+        participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
+        return;
+      }
+
       participantsStatus.textContent = "טוען משתתפות...";
       participantsList.style.display = "none";
       participantsList.innerHTML = "";
 
       try {
         const parts = await fetchJson("/api/participants");
+        cachedParticipants = parts || [];
+        participantsLoadedOnce = true;
 
-        participantsList.innerHTML = (parts || []).map(p => {
+        participantsList.innerHTML = cachedParticipants.map(p => {
           const name =
             (typeof p === "string") ? p :
             (p.name ?? p.full_name ?? p.fullName ?? "");
@@ -243,6 +307,7 @@
         participantsList.style.display = "block";
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
       } catch (e) {
+        closeParticipantsUI();
         participantsStatus.innerHTML = `<span class="error">שגיאה בטעינת משתתפות: ${escapeHtml(e.message)}</span>`;
       }
     });
