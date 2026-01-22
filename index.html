@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>פרויקט מסדי נתונים - ספרייה</title>
-  <link rel="stylesheet" href="style.css?v=10" />
+  <link rel="stylesheet" href="style.css?v=11" />
 </head>
 
 <body>
@@ -28,6 +28,7 @@
   <main class="container">
     <div class="grid">
 
+      <!-- BOOKS -->
       <section class="card" aria-label="Books Section">
         <div class="card__head">
           <h2 class="card__title">Books</h2>
@@ -40,11 +41,19 @@
               <span class="btn__text">רשימת ספרים</span>
               <span class="spinner spinner--btn" aria-hidden="true"></span>
             </button>
+
+            <!-- ✅ CSV -->
+            <button class="btn btn--ghost" id="btnCsv" disabled title="הורדה ל-CSV">
+              <span>הורד CSV</span>
+            </button>
           </div>
 
           <div class="field">
             <span>חיפוש</span>
-            <input id="searchInput" type="text" placeholder="חיפוש לפי שם ספר / מזהה..." disabled />
+            <div class="inputWrap">
+              <input id="searchInput" type="text" placeholder="חיפוש לפי שם / מזהה / סופר / מחיר..." disabled />
+              <button id="btnClearSearch" class="clearBtn" type="button" title="ניקוי חיפוש" aria-label="ניקוי חיפוש">✕</button>
+            </div>
           </div>
 
           <div class="field">
@@ -69,6 +78,7 @@
         <div id="booksWrap" class="tableWrap" style="display:none;"></div>
       </section>
 
+      <!-- PARTICIPANTS -->
       <aside class="card" aria-label="Participants Section">
         <div class="card__head">
           <h2 class="card__title">משתתפות</h2>
@@ -136,6 +146,9 @@
     const booksCounter = document.getElementById("booksCounter");
     const searchInput = document.getElementById("searchInput");
     const sortSelect = document.getElementById("sortSelect");
+    const btnClearSearch = document.getElementById("btnClearSearch");
+
+    const btnCsv = document.getElementById("btnCsv");
 
     const btnParticipants = document.getElementById("btnParticipants");
     const participantsStatus = document.getElementById("participantsStatus");
@@ -146,16 +159,18 @@
 
     let booksLoaded = false;
     let allBooks = [];
+    let currentBooksRows = [];
 
     let participantsLoaded = false;
     let participantsCache = [];
 
-    // close/open (hide only)
+    // ---------- Toggle helpers ----------
     function closeBooksUI() {
       booksWrap.style.display = "none";
       booksCounter.style.display = "none";
       searchInput.disabled = true;
       sortSelect.disabled = true;
+      btnCsv.disabled = true;
       btnBooks.querySelector(".btn__text").textContent = "רשימת ספרים";
       booksStatus.innerHTML = `לחצי על <b>רשימת ספרים</b> כדי לטעון את הנתונים מה־DB.`;
       if (openPanel === "books") openPanel = null;
@@ -167,6 +182,7 @@
       if (booksLoaded) {
         searchInput.disabled = false;
         sortSelect.disabled = false;
+        btnCsv.disabled = currentBooksRows.length === 0;
       }
       openPanel = "books";
     }
@@ -189,12 +205,49 @@
       if (target === "participants" && openPanel === "books") closeBooksUI();
     }
 
-    // Books
-    function renderBooks(rows) {
+    // ---------- (2) Highlight in text ----------
+    function escapeRegExp(s) {
+      return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function highlightText(text, q) {
+      const t = String(text ?? "");
+      const query = (q || "").trim();
+      if (!query) return escapeHtml(t);
+
+      const re = new RegExp("(" + escapeRegExp(query) + ")", "ig");
+      // Escape first, then apply highlight safely by splitting on match
+      const parts = t.split(re);
+      return parts.map((p, i) => {
+        const isMatch = i % 2 === 1;
+        return isMatch ? `<mark class="hl">${escapeHtml(p)}</mark>` : escapeHtml(p);
+      }).join("");
+    }
+
+    function formatPrice(v) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return escapeHtml(v);
+      return "₪" + n.toFixed(2);
+    }
+
+    // ---------- Books render ----------
+    function renderBooks(rows, query) {
+      currentBooksRows = rows || [];
+      btnCsv.disabled = !(currentBooksRows.length > 0);
+
+      const total = allBooks.length;
+      const shown = currentBooksRows.length;
+
       if (!rows || rows.length === 0) {
-        booksStatus.innerHTML = "<span class='error'>לא נמצאו ספרים.</span>";
-        booksWrap.innerHTML = "";
-        booksCounter.style.display = "none";
+        booksStatus.innerHTML = "<span class='error'>לא נמצאו תוצאות.</span>";
+        booksWrap.innerHTML = `
+          <div class="emptyBox">
+            <div class="emptyTitle">לא נמצאו תוצאות</div>
+            <div class="emptySub">נסי לשנות חיפוש או לנקות.</div>
+          </div>
+        `;
+        booksCounter.style.display = "inline-flex";
+        booksCounter.textContent = `מוצגים ${shown} מתוך ${total}`;
         return;
       }
 
@@ -202,39 +255,43 @@
         <table class="table">
           <thead>
             <tr>
-              <th>product_id</th>
-              <th>title</th>
-              <th>number_of_pages</th>
-              <th>author_id</th>
-              <th>price</th>
+              <th class="num">מזהה</th>
+              <th>שם ספר</th>
+              <th class="num">עמודים</th>
+              <th class="num">מזהה סופר/ת</th>
+              <th class="num">מחיר</th>
             </tr>
           </thead>
           <tbody>
             ${rows.map(r => `
               <tr>
-                <td>${escapeHtml(r.product_id)}</td>
-                <td class="cell-title">${escapeHtml(r.title)}</td>
-                <td>${escapeHtml(r.number_of_pages)}</td>
-                <td>${escapeHtml(r.author_id)}</td>
-                <td>${escapeHtml(r.price)}</td>
+                <td class="num">${escapeHtml(r.product_id)}</td>
+                <td class="cell-title">${highlightText(r.title, query)}</td>
+                <td class="num">${escapeHtml(r.number_of_pages)}</td>
+                <td class="num">${highlightText(r.author_id, query)}</td>
+                <td class="num">${highlightText(formatPrice(r.price), query)}</td>
               </tr>
             `).join("")}
           </tbody>
         </table>
       `;
+
       booksCounter.style.display = "inline-flex";
-      booksCounter.textContent = `מוצגים ${rows.length} ספרים`;
-      booksStatus.innerHTML = `<span class="ok">נטענו ${rows.length} ספרים בהצלחה.</span>`;
+      booksCounter.textContent = `מוצגים ${shown} מתוך ${total}`;
+      booksStatus.innerHTML = `<span class="ok">טעינה בוצעה בהצלחה.</span>`;
     }
 
     function applySearchSort() {
       let rows = [...allBooks];
+
       const q = (searchInput.value || "").trim().toLowerCase();
       if (q) {
         rows = rows.filter(b => {
           const title = String(b.title ?? "").toLowerCase();
           const id = String(b.product_id ?? "").toLowerCase();
-          return title.includes(q) || id.includes(q);
+          const author = String(b.author_id ?? "").toLowerCase();
+          const price = String(b.price ?? "").toLowerCase();
+          return title.includes(q) || id.includes(q) || author.includes(q) || price.includes(q);
         });
       }
 
@@ -255,9 +312,66 @@
         }
       });
 
-      renderBooks(rows);
+      renderBooks(rows, (searchInput.value || "").trim());
     }
 
+    // ---------- (1) CSV Export ----------
+    function toCsvValue(v) {
+      const s = String(v ?? "");
+      // escape quotes by doubling them
+      const escaped = s.replaceAll('"', '""');
+      return `"${escaped}"`;
+    }
+
+    function downloadCsv(rows) {
+      if (!rows || rows.length === 0) return;
+
+      // header labels
+      const header = ["product_id", "title", "number_of_pages", "author_id", "price"];
+      const lines = [];
+      lines.push(header.map(toCsvValue).join(","));
+
+      for (const r of rows) {
+        const line = [
+          r.product_id,
+          r.title,
+          r.number_of_pages,
+          r.author_id,
+          r.price
+        ].map(toCsvValue).join(",");
+        lines.push(line);
+      }
+
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      const stamp = new Date().toISOString().slice(0,19).replaceAll(":", "-");
+      a.download = `books_${stamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+    }
+
+    btnCsv.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      downloadCsv(currentBooksRows);
+    });
+
+    btnClearSearch.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (searchInput.disabled) return;
+      searchInput.value = "";
+      applySearchSort();
+      searchInput.focus();
+    });
+
+    // ---------- Books button ----------
     btnBooks.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -268,7 +382,7 @@
         return;
       }
 
-      // ✅ close other first
+      // close other first
       forceCloseOther("books");
       openBooksUI();
 
@@ -285,8 +399,10 @@
       try {
         allBooks = await fetchJson("/api/books");
         booksLoaded = true;
+
         searchInput.disabled = false;
         sortSelect.disabled = false;
+
         applySearchSort();
       } catch (err) {
         closeBooksUI();
@@ -300,7 +416,7 @@
     searchInput.addEventListener("input", () => { if (openPanel === "books") applySearchSort(); });
     sortSelect.addEventListener("change", () => { if (openPanel === "books") applySearchSort(); });
 
-    // Participants
+    // ---------- Participants ----------
     btnParticipants.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -311,11 +427,11 @@
         return;
       }
 
-      // ✅ close other first
+      // close other first
       forceCloseOther("participants");
       openParticipantsUI();
 
-      // cached (הכי חשוב!)
+      // cached
       if (participantsLoaded) {
         participantsList.innerHTML = participantsCache.map(n => `<li>${escapeHtml(n)}</li>`).join("");
         participantsStatus.innerHTML = `<span class="ok">המשתתפות הוצגו בהצלחה.</span>`;
@@ -328,6 +444,7 @@
 
       try {
         const parts = await fetchJson("/api/participants");
+
         participantsCache = (parts || []).map(p => {
           const name = (typeof p === "string") ? p : (p.name ?? p.full_name ?? p.fullName ?? "");
           return name || "";
