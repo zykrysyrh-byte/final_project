@@ -1,9 +1,9 @@
 :root{
-  --glass: rgba(18, 22, 32, .68);
-  --border: rgba(255,255,255,.14);
-  --text: rgba(255,255,255,.92);
-  --muted: rgba(255,255,255,.75);
-  --shadow: 0 20px 70px rgba(0,0,0,.45);
+  --glass: rgba(255,255,255,.18);   /* כרטיסים בהירים יותר */
+  --border: rgba(255,255,255,.30);
+  --text: rgba(255,255,255,.95);
+  --muted: rgba(255,255,255,.85);
+  --shadow: 0 20px 70px rgba(0,0,0,.25);
   --radius: 20px;
 }
 
@@ -16,13 +16,16 @@ body{
   font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
 }
 
-/* רקע Unsplash */
+/* 🔆 רקע מואר יותר */
 .bg{
   position: fixed;
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(rgba(10,14,22,.50), rgba(10,14,22,.65)),
+    linear-gradient(
+      rgba(255,255,255,.25),
+      rgba(255,255,255,.35)
+    ),
     url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=2000&q=60");
   background-size: cover;
   background-position: center;
@@ -42,12 +45,13 @@ h1{
   margin: 0 0 10px;
   font-size: clamp(28px, 4vw, 46px);
   letter-spacing: .5px;
-  text-shadow: 0 10px 40px rgba(0,0,0,.45);
+  color:#1a1a1a;
+  text-shadow: 0 8px 30px rgba(255,255,255,.6);
 }
 .subtitle{
   margin: 0 auto 16px;
   max-width: 860px;
-  color: var(--muted);
+  color:#222;
   line-height: 1.7;
 }
 .meta{
@@ -57,11 +61,11 @@ h1{
   flex-wrap:wrap;
 }
 .pill{
-  background: rgba(255,255,255,.10);
-  border: 1px solid var(--border);
+  background: rgba(255,255,255,.65);
+  border: 1px solid rgba(0,0,0,.1);
   padding: 8px 12px;
   border-radius: 999px;
-  backdrop-filter: blur(8px);
+  color:#111;
 }
 
 /* פריסה */
@@ -85,9 +89,10 @@ h1{
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   padding: 18px;
+  color:#111;
 }
 
 .card__head{
@@ -102,7 +107,7 @@ h1{
   font-size: 20px;
 }
 
-/* כלים/שדות */
+/* כלים */
 .controls{
   display:flex;
   gap: 14px;
@@ -118,24 +123,18 @@ h1{
   flex: 1;
 }
 .field span{
-  color: var(--muted);
+  color:#333;
   font-size: 13px;
 }
 
 input, select{
   height: 42px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,.08);
-  color: var(--text);
+  border: 1px solid rgba(0,0,0,.15);
+  background: rgba(255,255,255,.75);
+  color:#111;
   padding: 0 12px;
   outline: none;
-}
-input::placeholder{ color: rgba(255,255,255,.55); }
-
-input:focus, select:focus{
-  border-color: rgba(255,255,255,.28);
-  box-shadow: 0 0 0 3px rgba(255,255,255,.10);
 }
 
 /* כפתורים */
@@ -149,45 +148,43 @@ input:focus, select:focus{
   height: 42px;
   padding: 0 14px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,.08);
-  color: var(--text);
+  border: 1px solid rgba(0,0,0,.15);
+  background: rgba(255,255,255,.85);
+  color:#111;
   cursor: pointer;
   font-weight: 700;
-  transition: transform .08s ease, background .2s ease, border-color .2s ease;
 }
-.btn:hover{ background: rgba(255,255,255,.12); }
-.btn:active{ transform: scale(.98); }
+.btn:hover{
+  background: #fff;
+}
 
 .btn--primary{
-  background: rgba(120,170,255,.22);
-  border-color: rgba(120,170,255,.35);
+  background: #4f8cff;
+  color:#fff;
+  border-color:#4f8cff;
 }
 .btn--primary:hover{
-  background: rgba(120,170,255,.28);
+  background:#3b7bf0;
 }
 
 /* הודעות */
 .hint{
   margin: 12px 0 0;
-  color: var(--muted);
-  line-height: 1.6;
+  color:#333;
 }
 .status{
   margin-top: 10px;
-  color: var(--muted);
   font-size: 14px;
 }
-.ok{ color:#d8ffd8; font-weight:800; }
-.error{ color:#ffd2d2; font-weight:800; }
+.ok{ color:#0a7a3c; font-weight:800; }
+.error{ color:#b00020; font-weight:800; }
 
 .counter{
   display:inline-flex;
   align-items:center;
-  color: var(--muted);
   font-size: 14px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid var(--border);
+  background: rgba(255,255,255,.7);
+  border: 1px solid rgba(0,0,0,.15);
   padding: 8px 12px;
   border-radius: 999px;
 }
@@ -197,8 +194,8 @@ input:focus, select:focus{
   margin-top: 12px;
   overflow:auto;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(0,0,0,.12);
+  border: 1px solid rgba(0,0,0,.15);
+  background: rgba(255,255,255,.75);
 }
 
 .table{
@@ -209,7 +206,7 @@ input:focus, select:focus{
 
 .table th, .table td{
   padding: 12px 12px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(0,0,0,.12);
   text-align: right;
   white-space: nowrap;
   font-size: 14px;
@@ -218,26 +215,15 @@ input:focus, select:focus{
 .table thead th{
   position: sticky;
   top: 0;
-  z-index: 1;
-  background: rgba(18,22,32,.86);
-  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,.95);
   font-weight: 800;
 }
 
 .table tbody tr:nth-child(even){
-  background: rgba(255,255,255,.03);
-}
-.table tbody tr:hover{
-  background: rgba(255,255,255,.07);
+  background: rgba(0,0,0,.03);
 }
 
-.cell-title{
-  max-width: 360px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* רשימת משתתפות */
+/* משתתפות */
 .list{ margin:10px 0 0 0; padding:0 18px 0 0; }
 .list li{ margin:8px 0; }
 
@@ -245,6 +231,6 @@ input:focus, select:focus{
 .footer{
   padding: 18px 0 0;
   text-align:center;
-  color: rgba(255,255,255,.70);
+  color:#222;
   font-size: 12px;
 }
